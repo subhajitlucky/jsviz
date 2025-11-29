@@ -1,15 +1,38 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap');
+
+@theme {
+  --font-sans: 'Space Grotesk', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+
+  /* Semantic Colors mapped to Tailwind */
+  --color-brand-black: var(--bg-main);
+  --color-brand-zinc: var(--bg-surface);
+  --color-brand-border: var(--border-main);
+  --color-brand-lime: var(--accent-main);
+  --color-brand-blue: var(--accent-secondary);
+  --color-brand-white: var(--text-inverse);
+}
 
 :root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  /* Light Mode (Default) */
+  --bg-main: #ffffff;
+  --bg-surface: #f4f4f5; /* Zinc 100 */
+  --border-main: #e4e4e7; /* Zinc 200 */
+  --accent-main: #000000; /* Black accent for high contrast */
+  --accent-secondary: #2563eb; /* Blue 600 */
+  --text-main: #09090b;
+  --text-muted: #71717a;
+  --text-inverse: #ffffff; /* Text on accent buttons */
+
+  font-family: var(--font-sans);
   line-height: 1.5;
   font-weight: 400;
 
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
+  color-scheme: light;
+  color: var(--text-main);
+  background-color: var(--bg-main);
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -17,54 +40,120 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-a:hover {
-  color: #535bf2;
+.dark {
+  /* Dark Mode */
+  --bg-main: #09090b;
+  --bg-surface: #18181b;
+  --border-main: #27272a;
+  --accent-main: #ccff00; /* Neon Lime */
+  --accent-secondary: #3b82f6;
+  --text-main: #e4e4e7;
+  --text-muted: #a1a1aa;
+  --text-inverse: #09090b; /* Text on accent buttons */
+
+  color-scheme: dark;
+  color: var(--text-main);
+  background-color: var(--bg-main);
 }
 
 body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
+  background-color: var(--bg-main);
+  transition: background-color 0.3s ease;
 }
 
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
+
+/* Neo-Brutalist Utilities */
+.neo-card {
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-main);
+  transition: all 0.2s ease-in-out;
 }
 
-button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  background-color: #1a1a1a;
-  cursor: pointer;
-  transition: border-color 0.25s;
-}
-button:hover {
-  border-color: #646cff;
-}
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
+.neo-card:hover {
+  border-color: var(--accent-main);
+  transform: translate(-2px, -2px);
+  box-shadow: 4px 4px 0px var(--accent-main);
 }
 
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
-  }
-  a:hover {
-    color: #747bff;
-  }
-  button {
-    background-color: #f9f9f9;
-  }
+.neo-btn {
+  background-color: var(--accent-main);
+  color: var(--text-inverse);
+  font-weight: 700;
+  border: 1px solid var(--accent-main);
+  transition: all 0.1s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.neo-btn:hover {
+  background-color: var(--bg-main);
+  color: var(--accent-main);
+  border-color: var(--accent-main);
+  transform: translate(-2px, -2px);
+  box-shadow: 4px 4px 0px var(--accent-main);
+}
+
+.neo-btn:active {
+  transform: translate(0px, 0px);
+  box-shadow: 0px 0px 0px var(--accent-main);
+}
+
+.neo-btn-secondary {
+  background-color: transparent;
+  color: var(--text-main);
+  font-weight: 700;
+  border: 1px solid var(--border-main);
+  transition: all 0.1s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.neo-btn-secondary:hover {
+  border-color: var(--accent-main);
+  background-color: var(--bg-surface);
+  color: var(--accent-main);
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-main); 
+  border-left: 1px solid var(--border-main);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-main); 
+  border: 1px solid var(--bg-main);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--accent-main); 
+}
+
+/* Utility classes overrides for theme compatibility */
+.text-gray-400, .text-gray-500, .text-gray-600 {
+  color: var(--text-muted);
+}
+
+.text-white {
+  color: var(--text-main);
+}
+
+.bg-brand-black {
+  background-color: var(--bg-main);
+}
+
+.bg-brand-zinc {
+  background-color: var(--bg-surface);
+}
+
+.border-brand-border {
+  border-color: var(--border-main);
 }

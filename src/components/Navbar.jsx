@@ -1,28 +1,93 @@
-import React from 'react'
+import React from 'react';
+import { Link, useLocation } from 'react-router-dom';
+import useStore from '../store/useStore';
+import { Moon, Sun, Menu, X, Terminal } from 'lucide-react';
 
 const Navbar = () => {
+  const { theme, toggleTheme } = useStore();
+  const location = useLocation();
+  const [isMenuOpen, setIsMenuOpen] = React.useState(false);
+
+  const isActive = (path) => location.pathname === path;
+
+  const navLinks = [
+    { name: 'HOME', path: '/' },
+    { name: 'LEARN', path: '/learn' },
+    { name: 'PRACTICE', path: '/practice' },
+    { name: 'PLAYGROUND', path: '/playground' },
+  ];
+
   return (
-    <header className="w-full">
-      <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" role="navigation" aria-label="main navigation">
-        <div className="flex items-center justify-between py-4">
-          {/* Brand on the left */}
-          <div className="flex-shrink-0">
-            <a href="/" className="font-semibold text-lg no-underline">jsviz</a>
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-brand-black border-b border-brand-border h-16">
+      <div className="max-w-7xl mx-auto px-4 h-full flex justify-between items-center">
+        {/* Logo */}
+        <Link to="/" className="flex items-center space-x-2 group">
+          <div className="bg-brand-lime text-brand-black p-1 rounded-sm">
+            <Terminal size={20} strokeWidth={3} />
           </div>
+          <span className="text-xl font-bold tracking-tighter text-white group-hover:text-brand-lime transition-colors">
+            JS_VIZ
+          </span>
+        </Link>
 
-          {/* Nav items on the right */}
-          {/* visible on all sizes; previously hidden on small screens via `hidden md:flex` */}
-          <ul className="flex items-center gap-6 list-none m-0 p-0">
-            <li><a href="/concepts" className="no-underline">concept</a></li>
-            <li><a href="/compiler" className="no-underline">compiler</a></li>
-            <li><a href="/about" className="no-underline">about</a></li>
-          </ul>
-
-          {/* Small-screen fallback removed — items now visible on all sizes */}
+        {/* Desktop Nav */}
+        <div className="hidden md:flex items-center space-x-8">
+          {navLinks.map((link) => (
+            <Link
+              key={link.name}
+              to={link.path}
+              className={`text-sm font-bold tracking-widest transition-colors relative py-1 ${isActive(link.path)
+                  ? 'text-brand-lime'
+                  : 'text-gray-400 hover:text-white'
+                }`}
+            >
+              {link.name}
+              {isActive(link.path) && (
+                <span className="absolute bottom-0 left-0 w-full h-0.5 bg-brand-lime"></span>
+              )}
+            </Link>
+          ))}
         </div>
-      </nav>
-    </header>
-  )
-}
 
-export default Navbar
+        {/* Actions */}
+        <div className="flex items-center space-x-4">
+          <button
+            onClick={toggleTheme}
+            className="p-2 text-gray-400 hover:text-brand-lime transition-colors border border-transparent hover:border-brand-border rounded-sm"
+          >
+            {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
+          </button>
+          <div className="md:hidden">
+            <button
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              className="p-2 text-gray-400 hover:text-white"
+            >
+              {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Mobile menu */}
+      {isMenuOpen && (
+        <div className="md:hidden absolute top-16 left-0 right-0 bg-brand-black border-b border-brand-border">
+          <div className="flex flex-col p-4 space-y-4">
+            {navLinks.map((link) => (
+              <Link
+                key={link.name}
+                to={link.path}
+                onClick={() => setIsMenuOpen(false)}
+                className={`text-lg font-bold tracking-widest ${isActive(link.path) ? 'text-brand-lime' : 'text-gray-400'
+                  }`}
+              >
+                {link.name}
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
+    </nav>
+  );
+};
+
+export default Navbar;
