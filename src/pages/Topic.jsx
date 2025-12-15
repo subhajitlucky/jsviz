@@ -1,36 +1,33 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getTopicById } from '../data/topics';
+import { getTopicContent } from '../data/topicContents';
 import Sidebar from '../components/Sidebar';
 import { topics } from '../data/topics';
 import CodeEditor from '../components/CodeEditor';
 import VisualizerCanvas from '../components/VisualizerCanvas';
 import useStore from '../store/useStore';
-import { CheckSquare, ArrowLeft, Play, Terminal } from 'lucide-react';
+import { CheckSquare, Code, Lightbulb, BookOpen, Cpu, Layers } from 'lucide-react';
 
 const Topic = () => {
     const { id } = useParams();
     const navigate = useNavigate();
     const topic = getTopicById(id);
-    const { markTopicCompleted } = useStore();
+    const content = getTopicContent(id);
+    const { markTopicCompleted, progress } = useStore();
 
     const [code, setCode] = useState('');
     const [isRunning, setIsRunning] = useState(false);
+    const [activeTab, setActiveTab] = useState('overview');
 
     useEffect(() => {
-        if (topic) {
-            let initialCode = '// Write some code to visualize\n';
-            if (topic.id === 'variables') {
-                initialCode = 'let a = 10;\nconst b = "Hello";\nvar c = true;\n\nconsole.log(a, b, c);';
-            } else if (topic.id === 'arrays') {
-                initialCode = 'const arr = [1, 2, 3, 4, 5];\nconsole.log(arr);';
-            }
-            setCode(initialCode);
+        if (topic && content) {
+            setCode(content.examples[0]?.code || '// No example code available');
         }
-    }, [topic]);
+    }, [topic, content]);
 
     if (!topic) {
-        return <div className="p-20 text-center text-white font-mono">ERROR: TOPIC_NOT_FOUND</div>;
+        return <div className="p-20 text-center font-mono" style={{ color: 'var(--text-main)' }}>ERROR: TOPIC_NOT_FOUND</div>;
     }
 
     const handleRun = (newCode) => {
@@ -43,75 +40,186 @@ const Topic = () => {
         markTopicCompleted(topic.id);
     };
 
+    const isCompleted = progress.completedTopics.includes(topic.id);
+
+    // If no detailed content exists, show placeholder
+    if (!content) {
+        return (
+            <div className="flex min-h-screen pt-16" style={{ backgroundColor: 'var(--bg-main)' }}>
+                <Sidebar topics={topics} />
+                <div className="flex-grow p-24 text-center">
+                    <h1 className="text-3xl font-bold mb-4" style={{ color: 'var(--text-main)' }}>{topic.title}</h1>
+                    <p className="font-mono" style={{ color: 'var(--text-muted)' }}>
+                        Detailed content for this topic is coming soon.
+                    </p>
+                </div>
+            </div>
+        );
+    }
+
+    const tabs = [
+        { id: 'overview', label: 'Overview', icon: BookOpen },
+        { id: 'syntax', label: 'Syntax', icon: Code },
+        { id: 'examples', label: 'Examples', icon: Lightbulb },
+        { id: 'memory', label: 'Memory Model', icon: Cpu },
+    ];
+
     return (
-        <div className="flex min-h-screen pt-16 bg-brand-black">
+        <div className="flex min-h-screen pt-16" style={{ backgroundColor: 'var(--bg-main)' }}>
             <Sidebar topics={topics} />
 
-            <div className="flex-grow flex flex-col h-[calc(100vh-4rem)] overflow-hidden">
+            <div className="flex-grow flex flex-col overflow-hidden">
                 {/* Header */}
-                <div className="border-b border-brand-border px-6 py-4 flex justify-between items-center bg-brand-zinc">
+                <div className="border-b px-6 py-4 flex justify-between items-center" style={{ borderColor: 'var(--border-main)', backgroundColor: 'var(--bg-surface)' }}>
                     <div>
                         <div className="flex items-center space-x-3 mb-1">
-                            <span className="font-mono text-xs text-brand-lime border border-brand-lime px-1">
-                                ID: {topic.id.toUpperCase()}
+                            <span className="font-mono text-xs px-2 py-1 border" style={{ color: 'var(--accent-main)', borderColor: 'var(--accent-main)' }}>
+                                {topic.id.toUpperCase()}
                             </span>
-                            <h1 className="text-xl font-bold text-white tracking-tight uppercase">
+                            <h1 className="text-2xl font-bold tracking-tight uppercase" style={{ color: 'var(--text-main)' }}>
                                 {topic.title}
                             </h1>
+                            {isCompleted && <CheckSquare size={20} style={{ color: 'var(--accent-main)' }} />}
                         </div>
-                        <p className="text-sm text-gray-400 font-mono">{topic.description}</p>
+                        <p className="text-sm font-mono" style={{ color: 'var(--text-muted)' }}>{topic.description}</p>
                     </div>
                     <button
                         onClick={handleComplete}
                         className="neo-btn px-4 py-2 text-sm flex items-center gap-2"
                     >
                         <CheckSquare size={16} />
-                        MARK_COMPLETE
+                        {isCompleted ? 'COMPLETED' : 'MARK_COMPLETE'}
                     </button>
                 </div>
 
-                {/* Content Split */}
-                <div className="flex-grow flex flex-col lg:flex-row overflow-hidden">
-                    {/* Left Panel: Explanation & Visualization */}
-                    <div className="lg:w-1/2 flex flex-col border-r border-brand-border overflow-y-auto custom-scrollbar bg-brand-black">
-                        <div className="p-8 border-b border-brand-border">
-                            <div className="prose prose-invert max-w-none font-mono text-sm">
-                                <h3 className="text-brand-lime uppercase tracking-widest border-b border-brand-border pb-2 mb-4">Concept Data</h3>
-                                <p className="text-gray-300 leading-relaxed">
-                                    Here you will learn about <strong className="text-white">{topic.title}</strong>.
-                                    This section explains the core concepts, syntax, and common pitfalls.
-                                </p>
-                                <div className="bg-brand-zinc border border-brand-lime p-4 mt-6">
-                                    <p className="text-brand-lime m-0 font-bold uppercase text-xs mb-1">
-                    // SYSTEM_TIP
-                                    </p>
-                                    <p className="text-gray-300 m-0">
-                                        Modify the code in the editor to trigger real-time visualization updates.
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
+                {/* Tabs */}
+                <div className="border-b flex space-x-1 px-6" style={{ borderColor: 'var(--border-main)', backgroundColor: 'var(--bg-surface)' }}>
+                    {tabs.map(tab => {
+                        const Icon = tab.icon;
+                        return (
+                            <button
+                                key={tab.id}
+                                onClick={() => setActiveTab(tab.id)}
+                                className={`px-4 py-3 font-mono text-sm uppercase tracking-wider flex items-center gap-2 border-b-2 transition-colors ${activeTab === tab.id
+                                        ? 'border-[var(--accent-main)] text-[var(--accent-main)]'
+                                        : 'border-transparent'
+                                    }`}
+                                style={{ color: activeTab === tab.id ? 'var(--accent-main)' : 'var(--text-muted)' }}
+                            >
+                                <Icon size={16} />
+                                {tab.label}
+                            </button>
+                        );
+                    })}
+                </div>
 
-                        <div className="flex-grow p-0 relative bg-brand-zinc/50">
-                            <div className="absolute top-0 left-0 w-full border-b border-brand-border bg-brand-zinc px-4 py-1 flex justify-between items-center">
-                                <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">
-                                    VISUALIZATION_OUTPUT
-                                </span>
-                                <div className="flex space-x-1">
-                                    <div className="w-2 h-2 rounded-full bg-red-500"></div>
-                                    <div className="w-2 h-2 rounded-full bg-yellow-500"></div>
-                                    <div className="w-2 h-2 rounded-full bg-green-500"></div>
+                {/* Content Area */}
+                <div className="flex-grow flex overflow-hidden">
+                    {/* Left: Content */}
+                    <div className="flex-1 overflow-y-auto p-8" style={{ backgroundColor: 'var(--bg-main)' }}>
+                        {activeTab === 'overview' && (
+                            <div className="max-w-3xl">
+                                <h2 className="text-xl font-bold mb-4 flex items-center gap-2" style={{ color: 'var(--text-main)' }}>
+                                    <BookOpen size={24} />
+                                    What is {topic.title}?
+                                </h2>
+                                <p className="font-mono text-sm leading-relaxed mb-8" style={{ color: 'var(--text-main)' }}>
+                                    {content.definition}
+                                </p>
+
+                                <h3 className="text-lg font-bold mb-4 flex items-center gap-2" style={{ color: 'var(--text-main)' }}>
+                                    <Layers size={20} />
+                                    Use Cases
+                                </h3>
+                                <ul className="space-y-2 mb-8">
+                                    {content.useCases.map((useCase, idx) => (
+                                        <li key={idx} className="flex items-start gap-3">
+                                            <span className="text-[var(--accent-main)] mt-1">▸</span>
+                                            <span className="font-mono text-sm" style={{ color: 'var(--text-main)' }}
+                                                dangerouslySetInnerHTML={{ __html: useCase.replace(/\*\*(.*?)\*\*/g, '<strong style="color: var(--accent-main)">$1</strong>') }}
+                                            />
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+                        )}
+
+                        {activeTab === 'syntax' && (
+                            <div className="max-w-3xl">
+                                <h2 className="text-xl font-bold mb-4 flex items-center gap-2" style={{ color: 'var(--text-main)' }}>
+                                    <Code size={24} />
+                                    Syntax
+                                </h2>
+                                <pre className="neo-card p-6 font-mono text-sm overflow-x-auto mb-6" style={{ backgroundColor: 'var(--bg-surface)', color: 'var(--text-main)' }}>
+                                    {content.syntax}
+                                </pre>
+                            </div>
+                        )}
+
+                        {activeTab === 'examples' && (
+                            <div className="max-w-3xl space-y-6">
+                                <h2 className="text-xl font-bold mb-4 flex items-center gap-2" style={{ color: 'var(--text-main)' }}>
+                                    <Lightbulb size={24} />
+                                    Examples
+                                </h2>
+                                {content.examples.map((example, idx) => (
+                                    <div key={idx} className="neo-card p-6">
+                                        <h3 className="text-sm font-bold mb-2 uppercase tracking-wider" style={{ color: 'var(--accent-main)' }}>
+                                            Example {idx + 1}
+                                        </h3>
+                                        <pre className="p-4 rounded font-mono text-sm overflow-x-auto mb-3" style={{ backgroundColor: '#1e1e1e', color: '#d4d4d4' }}>
+                                            {example.code}
+                                        </pre>
+                                        <p className="text-sm font-mono" style={{ color: 'var(--text-muted)' }}>
+                                            💡 {example.explanation}
+                                        </p>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+
+                        {activeTab === 'memory' && (
+                            <div className="max-w-3xl">
+                                <h2 className="text-xl font-bold mb-4 flex items-center gap-2" style={{ color: 'var(--text-main)' }}>
+                                    <Cpu size={24} />
+                                    How It Works In Memory
+                                </h2>
+                                <div className="neo-card p-6">
+                                    <pre className="font-mono text-sm whitespace-pre-wrap" style={{ color: 'var(--text-main)' }}>
+                                        {content.memoryModel}
+                                    </pre>
                                 </div>
+
+                                {/* Visualization */}
+                                {content.visualizationType && (
+                                    <div className="mt-8">
+                                        <h3 className="text-lg font-bold mb-4" style={{ color: 'var(--text-main)' }}>
+                                            Visual Representation
+                                        </h3>
+                                        <div className="neo-card p-6 relative min-h-[300px]" style={{ backgroundColor: 'var(--bg-surface)' }}>
+                                            <VisualizerCanvas topicId={topic.id} code={code} isRunning={isRunning} />
+                                        </div>
+                                    </div>
+                                )}
                             </div>
-                            <div className="p-8 pt-12 h-full">
-                                <VisualizerCanvas topicId={topic.id} code={code} isRunning={isRunning} />
-                            </div>
-                        </div>
+                        )}
                     </div>
 
-                    {/* Right Panel: Code Editor */}
-                    <div className="lg:w-1/2 bg-[#1e1e1e] flex flex-col">
-                        <CodeEditor initialCode={code} onRun={handleRun} />
+                    {/* Right: Interactive Code Editor */}
+                    <div className="w-[500px] border-l flex flex-col" style={{ borderColor: 'var(--border-main)', backgroundColor: '#1e1e1e' }}>
+                        <div className="px-4 py-2 border-b flex items-center justify-between" style={{ borderColor: 'var(--border-main)', backgroundColor: '#252526' }}>
+                            <span className="text-xs font-bold uppercase tracking-wider text-gray-400">
+                                Interactive Editor
+                            </span>
+                            <div className="flex space-x-1">
+                                <div className="w-2 h-2 rounded-full bg-red-500"></div>
+                                <div className="w-2 h-2 rounded-full bg-yellow-500"></div>
+                                <div className="w-2 h-2 rounded-full bg-green-500"></div>
+                            </div>
+                        </div>
+                        <div className="flex-grow">
+                            <CodeEditor initialCode={code} onRun={handleRun} />
+                        </div>
                     </div>
                 </div>
             </div>

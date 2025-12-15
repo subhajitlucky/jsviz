@@ -112,7 +112,7 @@ const Problem = () => {
                 <div className="lg:w-1/3 flex flex-col border-r border-brand-border overflow-y-auto custom-scrollbar bg-brand-black">
                     <div className="p-6 border-b border-brand-border">
                         <h3 className="text-xs font-bold text-brand-lime uppercase tracking-widest mb-4">Problem Spec</h3>
-                        <p className="text-gray-300 mb-6 font-mono text-sm leading-relaxed">{problem.description}</p>
+                        <p className="text-gray-600 mb-6 font-mono text-sm leading-relaxed">{problem.description}</p>
                     </div>
 
                     <div className="p-6">
