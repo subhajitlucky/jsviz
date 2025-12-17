@@ -93,7 +93,7 @@ const Topic = () => {
                 <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                     <div className="flex-1">
                         <div className="flex items-center space-x-2 sm:space-x-3 mb-2 flex-wrap gap-2">
-                            <Link to="/learn" className="p-1.5 rounded hover:bg-gray-800 text-gray-400 transition-colors mr-1" title="Back to Topics">
+                            <Link to="/learn" className="p-1.5 rounded hover:bg-gray-800 text-gray-400 transition-colors mr-1" title="Back to Topics" aria-label="Back to Topics List">
                                 <List size={18} />
                             </Link>
                             <span className="font-mono text-xs px-2 py-1 border" style={{ color: 'var(--accent-main)', borderColor: 'var(--accent-main)' }}>
@@ -108,12 +108,13 @@ const Topic = () => {
                     </div>
                     
                     <div className="flex items-center gap-3">
-                        <div className="flex items-center bg-brand-zinc rounded p-1 border border-brand-border mr-2">
+                        <div className="flex items-center bg-brand-zinc rounded p-1 border border-brand-border mr-2 shadow-inner">
                             <button
                                 onClick={() => prevTopic && navigate(`/topic/${prevTopic.id}`)}
                                 disabled={!prevTopic}
-                                className={`p-1.5 rounded ${!prevTopic ? 'opacity-30 cursor-not-allowed' : 'hover:bg-gray-700 text-white'}`}
+                                className={`p-1.5 rounded transition-all ${!prevTopic ? 'opacity-20 cursor-not-allowed' : 'hover:bg-gray-700 text-brand-lime hover:scale-110 active:scale-95'}`}
                                 title={prevTopic ? `Previous: ${prevTopic.title}` : "No previous topic"}
+                                aria-label={prevTopic ? `Go to previous topic: ${prevTopic.title}` : "No previous topic"}
                             >
                                 <ArrowLeft size={18} />
                             </button>
@@ -121,8 +122,9 @@ const Topic = () => {
                             <button
                                 onClick={() => nextTopic && navigate(`/topic/${nextTopic.id}`)}
                                 disabled={!nextTopic}
-                                className={`p-1.5 rounded ${!nextTopic ? 'opacity-30 cursor-not-allowed' : 'hover:bg-gray-700 text-white'}`}
+                                className={`p-1.5 rounded transition-all ${!nextTopic ? 'opacity-20 cursor-not-allowed' : 'hover:bg-gray-700 text-brand-lime hover:scale-110 active:scale-95'}`}
                                 title={nextTopic ? `Next: ${nextTopic.title}` : "No next topic"}
+                                aria-label={nextTopic ? `Go to next topic: ${nextTopic.title}` : "No next topic"}
                             >
                                 <ArrowRight size={18} />
                             </button>

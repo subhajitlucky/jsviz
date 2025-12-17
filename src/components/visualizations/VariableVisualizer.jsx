@@ -73,14 +73,15 @@ const VariableVisualizer = ({ variables }) => {
                     text-shadow: 0 0 10px rgba(var(--accent-main-rgb), 0.2);
                 }
                 .card-addr {
-                    font-family: 'Courier New', monospace;
+                    font-family: 'JetBrains Mono', monospace;
                     font-size: 9px;
                     color: var(--text-muted);
                     margin-top: 12px;
-                    background: rgba(0,0,0,0.05);
-                    padding: 2px 6px;
-                    border-radius: 4px;
+                    background: rgba(128, 128, 128, 0.1);
+                    padding: 4px 8px;
+                    border-radius: 6px;
                     display: inline-block;
+                    border: 1px solid rgba(var(--accent-main-rgb), 0.1);
                 }
                 .pulse-dot {
                     width: 6px;

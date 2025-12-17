@@ -24,7 +24,7 @@ const CodeEditor = ({ initialCode = '', onRun, readOnly = false }) => {
         setOutput([]);
         setIsError(false);
 
-        const logs = [];
+        const localLogs = [];
         const originalConsoleLog = console.log;
         const originalConsoleError = console.error;
         let restored = false;
@@ -40,18 +40,21 @@ const CodeEditor = ({ initialCode = '', onRun, readOnly = false }) => {
             if (isErr) setIsError(true);
             const line = args
                 .map(arg => {
+                    if (arg === null) return 'null';
+                    if (arg === undefined) return 'undefined';
                     if (typeof arg === 'object') {
                         try {
-                            return JSON.stringify(arg);
+                            return JSON.stringify(arg, null, 2);
                         } catch {
-                            return '[object]';
+                            return '[Circular Object]';
                         }
                     }
                     return String(arg);
                 })
                 .join(' ');
-            logs.push(line);
-            setOutput([...logs]);
+            localLogs.push(line);
+            // Batch updates for better performance
+            setOutput([...localLogs]);
         };
 
         console.log = (...args) => pushLog(false, args);
@@ -73,7 +76,7 @@ const CodeEditor = ({ initialCode = '', onRun, readOnly = false }) => {
             // allow async logs to arrive, then restore console
             setTimeout(() => {
                 restoreConsole();
-                if (onRun) onRun(code, logs, isError);
+                if (onRun) onRun(code, localLogs, isError);
             }, FLUSH_DELAY);
         }
     };

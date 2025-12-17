@@ -28,11 +28,29 @@ import microtasks from './microtasks';
 import promises from './promises';
 import asyncAwait from './asyncAwait';
 import modules from './modules';
+import templateLiterals from './templateLiterals';
+import typedArrays from './typedArrays';
+import numbers from './numbers';
+import math from './math';
+import bigint from './bigint';
+import date from './date';
+import intl from './intl';
+import json from './json';
+import dynamicImports from './dynamicImports';
 import propertyDescriptors from './propertyDescriptors';
 import iterationProtocols from './iterationProtocols';
 import mapSet from './mapSet';
 import generators from './generators';
 import functionsContent from './functions';
+
+import specInternals from './specInternals';
+import memoryModel from './memoryModel';
+import sharedMemory from './sharedMemory';
+import asyncPatterns from './asyncPatterns';
+import metaprogramming from './metaprogramming';
+import evalContent from './eval';
+import security from './security';
+import legacy from './legacy';
 
 export const topicContents = {
     'variables-scope': variablesScope,
@@ -68,6 +86,23 @@ export const topicContents = {
     'iteration-protocols': iterationProtocols,
     'map-set': mapSet,
     'generators': generators,
+    'template-literals': templateLiterals,
+    'typed-arrays': typedArrays,
+    'numbers': numbers,
+    'math': math,
+    'bigint': bigint,
+    'date': date,
+    'intl': intl,
+    'json': json,
+    'dynamic-imports': dynamicImports,
+    'spec-internals': specInternals,
+    'memory-model': memoryModel,
+    'shared-memory': sharedMemory,
+    'async-patterns': asyncPatterns,
+    'metaprogramming': metaprogramming,
+    'eval': evalContent,
+    'security': security,
+    'legacy': legacy,
     variables,
     functions: functionsContent,
 };
