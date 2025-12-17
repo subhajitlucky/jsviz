@@ -1,11 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { getTopicById } from '../data/topics';
 import { getTopicContent } from '../data/topics/contents';
 import CodeEditor from '../components/CodeEditor';
 import VisualizerCanvas from '../components/VisualizerCanvas';
 import useStore from '../store/useStore';
-import { CheckSquare, Code, Lightbulb, BookOpen, Cpu, Layers } from 'lucide-react';
+import { CheckSquare, Code, Lightbulb, BookOpen, Cpu, Layers, Copy, Check } from 'lucide-react';
 
 const Topic = () => {
     const { id } = useParams();
@@ -17,6 +21,7 @@ const Topic = () => {
     const [code, setCode] = useState('');
     const [isRunning, setIsRunning] = useState(false);
     const [activeTab, setActiveTab] = useState('overview');
+    const [copiedIndex, setCopiedIndex] = useState(null);
 
     useEffect(() => {
         if (topic && content) {
@@ -32,6 +37,13 @@ const Topic = () => {
         setCode(newCode);
         setIsRunning(true);
         setTimeout(() => setIsRunning(false), 100);
+    };
+
+    const handleCopy = (text, index) => {
+        navigator.clipboard.writeText(text);
+        setCode(text); // Auto-paste to editor
+        setCopiedIndex(index);
+        setTimeout(() => setCopiedIndex(null), 2000);
     };
 
     const handleComplete = () => {
@@ -150,9 +162,16 @@ const Topic = () => {
                                 <Code size={24} />
                                 Syntax
                             </h2>
-                            <pre className="neo-card p-4 sm:p-6 font-mono text-xs sm:text-sm overflow-x-auto mb-6" style={{ backgroundColor: 'var(--bg-surface)', color: 'var(--text-main)' }}>
-                                {content.syntax}
-                            </pre>
+                            <div className="neo-card overflow-hidden" style={{ backgroundColor: '#1e1e1e' }}>
+                                <SyntaxHighlighter
+                                    language="javascript"
+                                    style={vscDarkPlus}
+                                    customStyle={{ margin: 0, padding: '1.5rem', background: '#1e1e1e', fontSize: '0.875rem' }}
+                                    wrapLongLines={true}
+                                >
+                                    {content.syntax}
+                                </SyntaxHighlighter>
+                            </div>
                         </div>
                         )}
 
@@ -163,13 +182,29 @@ const Topic = () => {
                                 Examples
                             </h2>
                             {content.examples.map((example, idx) => (
-                                <div key={idx} className="neo-card p-4 sm:p-6">
-                                    <h3 className="text-xs sm:text-sm font-bold mb-2 uppercase tracking-wider" style={{ color: 'var(--accent-main)' }}>
-                                        Example {idx + 1}
-                                    </h3>
-                                    <pre className="p-3 sm:p-4 rounded font-mono text-xs sm:text-sm overflow-x-auto mb-3" style={{ backgroundColor: '#1e1e1e', color: '#d4d4d4' }}>
-                                        {example.code}
-                                    </pre>
+                                <div key={idx} className="neo-card p-4 sm:p-6 relative group">
+                                    <div className="flex justify-between items-center mb-2">
+                                        <h3 className="text-xs sm:text-sm font-bold uppercase tracking-wider" style={{ color: 'var(--accent-main)' }}>
+                                            Example {idx + 1}
+                                        </h3>
+                                        <button
+                                            onClick={() => handleCopy(example.code, idx)}
+                                            className="p-1.5 rounded bg-brand-zinc hover:bg-gray-700 text-gray-400 hover:text-white transition-colors"
+                                            title="Copy to Editor"
+                                        >
+                                            {copiedIndex === idx ? <Check size={14} className="text-green-400" /> : <Copy size={14} />}
+                                        </button>
+                                    </div>
+                                    <div className="rounded overflow-hidden mb-3 border border-gray-700 relative">
+                                        <SyntaxHighlighter
+                                            language="javascript"
+                                            style={vscDarkPlus}
+                                            customStyle={{ margin: 0, padding: '1rem', background: '#1e1e1e', fontSize: '0.875rem' }}
+                                            wrapLongLines={true}
+                                        >
+                                            {example.code}
+                                        </SyntaxHighlighter>
+                                    </div>
                                     <p className="text-xs sm:text-sm font-mono" style={{ color: 'var(--text-muted)' }}>
                                         💡 {example.explanation}
                                     </p>
@@ -179,35 +214,76 @@ const Topic = () => {
                         )}
 
                         {activeTab === 'memory' && (
-                            <div>
-                            <h2 className="text-lg sm:text-xl font-bold mb-4 flex items-center gap-2" style={{ color: 'var(--text-main)' }}>
-                                <Cpu size={24} />
-                                How It Works In Memory
-                            </h2>
-                            <div className="neo-card p-4 sm:p-6">
-                                <pre className="font-mono text-xs sm:text-sm whitespace-pre-wrap" style={{ color: 'var(--text-main)' }}>
-                                    {content.memoryModel}
-                                </pre>
-                            </div>
-
-                            {/* Visualization */}
-                            {content.visualizationType && (
-                                <div className="mt-8">
-                                    <h3 className="text-base sm:text-lg font-bold mb-4" style={{ color: 'var(--text-main)' }}>
-                                        Visual Representation
-                                    </h3>
-                                    <div className="neo-card p-4 sm:p-6 relative min-h-[250px] sm:min-h-[300px]" style={{ backgroundColor: 'var(--bg-surface)' }}>
-                                        <VisualizerCanvas topicId={topic.id} code={code} isRunning={isRunning} />
-                                    </div>
+                            <div className="max-w-3xl">
+                                <h2 className="text-lg sm:text-xl font-bold mb-4 flex items-center gap-2" style={{ color: 'var(--text-main)' }}>
+                                    <Cpu size={24} />
+                                    How It Works In Memory
+                                </h2>
+                                <div className="neo-card p-6 markdown-content">
+                                    <ReactMarkdown
+                                        remarkPlugins={[remarkGfm]}
+                                        components={{
+                                            h3: ({ node, ...props }) => <h3 className="text-lg font-bold mt-4 mb-2 text-[var(--text-main)]" {...props} />,
+                                            strong: ({ node, ...props }) => <strong className="text-[var(--accent-main)]" {...props} />,
+                                            ul: ({ node, ...props }) => <ul className="list-disc pl-5 space-y-1 mb-4 text-[var(--text-main)]" {...props} />,
+                                            ol: ({ node, ...props }) => <ol className="list-decimal pl-5 space-y-1 mb-4 text-[var(--text-main)]" {...props} />,
+                                            li: ({ node, ...props }) => <li className="text-sm font-mono leading-relaxed pl-1" {...props} />,
+                                            p: ({ node, ...props }) => <p className="text-sm font-mono leading-relaxed mb-4 text-[var(--text-main)]" {...props} />,
+                                            code: ({ node, inline, className, children, ...props }) => {
+                                                const match = /language-(\w+)/.exec(className || '');
+                                                if (!inline && match) {
+                                                    return (
+                                                        <SyntaxHighlighter
+                                                            style={vscDarkPlus}
+                                                            language={match[1]}
+                                                            PreTag="div"
+                                                            customStyle={{
+                                                                margin: '1rem 0',
+                                                                padding: '1rem',
+                                                                background: '#1e1e1e',
+                                                                fontSize: '0.875rem',
+                                                                borderRadius: '0.375rem',
+                                                            }}
+                                                            wrapLongLines
+                                                            {...props}
+                                                        >
+                                                            {String(children).replace(/\n$/, '')}
+                                                        </SyntaxHighlighter>
+                                                    );
+                                                }
+                                                return (
+                                                    <code
+                                                        className="inline-block align-middle bg-[#f4f4f5] text-[#111] px-1.5 py-0.5 rounded text-xs font-bold border border-gray-300 mx-1"
+                                                        {...props}
+                                                    >
+                                                        {children}
+                                                    </code>
+                                                );
+                                            },
+                                        }}
+                                    >
+                                        {content.memoryModel}
+                                    </ReactMarkdown>
                                 </div>
-                            )}
-                        </div>
+
+                                {/* Visualization */}
+                                {content.visualizationType && (
+                                    <div className="mt-8">
+                                        <h3 className="text-base sm:text-lg font-bold mb-4" style={{ color: 'var(--text-main)' }}>
+                                            Visual Representation
+                                        </h3>
+                                        <div className="neo-card p-4 sm:p-6 relative min-h-[250px] sm:min-h-[300px]" style={{ backgroundColor: 'var(--bg-surface)' }}>
+                                            <VisualizerCanvas topicId={topic.id} code={code} isRunning={isRunning} />
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
                         )}
                     </div>
                     </div>
 
                 {/* Right: Interactive Code Editor */}
-                <div className="w-full lg:w-[500px] border-t lg:border-t-0 lg:border-l flex flex-col order-1 lg:order-2" style={{ borderColor: 'var(--border-main)', backgroundColor: '#1e1e1e', maxHeight: '500px', minHeight: '300px' }}>
+                <div className="w-full lg:w-[600px] border-t lg:border-t-0 lg:border-l flex flex-col order-1 lg:order-2" style={{ borderColor: 'var(--border-main)', backgroundColor: '#1e1e1e', height: 'calc(100vh - 100px)', minHeight: '600px' }}>
                     <div className="px-4 py-2 border-b flex items-center justify-between" style={{ borderColor: 'var(--border-main)', backgroundColor: '#252526' }}>
                         <span className="text-xs font-bold uppercase tracking-wider text-gray-400">
                             Interactive Editor

@@ -1,73 +1,81 @@
 const variablesScope = {
     definition: "var, let, and const all declare variables, but they differ in scope (where the name is visible), hoisting/TDZ behavior, and reassignment rules. Choosing the right one avoids leaks, surprises, and accidental globals.",
 
-    syntax: `// 1) Scope
-if (true) {
-  var a = 10;   // function-scoped (leaks out of the block)
-  let b = 20;   // block-scoped
-  const c = 30; // block-scoped
+    syntax: `// Declarations
+var name1 = value;    // Function-scoped
+let name2 = value;    // Block-scoped
+const name3 = value;  // Block-scoped & immutable binding
+
+// Scope Blocks
+{
+  // "Block" scope created here
+  let visibleHere = 1;
 }
-console.log(a); // ✅ 10
-// console.log(b); // ❌ ReferenceError
-// console.log(c); // ❌ ReferenceError
 
-// 2) Reassignment
-var x = 1;  x = 2;  // ✅ allowed
-let y = 1;  y = 2;  // ✅ allowed
-const z = 1;
-// z = 2; // ❌ cannot reassign binding
+function name() {
+  // "Function" scope created here
+  var visibleHere = 1;
+}
 
-// 3) Hoisting + TDZ
-console.log(a); // ✅ undefined (var is hoisted & initialized)
-var a = 10;
+// Reassignment Syntax
+name1 = newValue;     // Allowed
+name2 = newValue;     // Allowed
+name3 = newValue;     // Error!
 
-// console.log(b); // ❌ ReferenceError (TDZ)
-let b = 20;
-
-// 4) const with objects (reference is fixed, contents can mutate)
-const user = { name: "Subhajit" };
-user.name = "Alex"; // ✅ mutate property
-// user = {};       // ❌ cannot rebind identifier
+// Hoisting Behavior
+// var: hoisted as undefined
+// let/const: hoisted but uninitialized (TDZ)
 `,
 
     examples: [
         {
-            code: `// Scope: var leaks, let/const stay in the block
+            code: `// 1. Block Scope vs Function Scope
 if (true) {
-  var a = 10;
-  let b = 20;
-  const c = 30;
+  var functionScoped = 'I leak out!';
+  let blockScoped = 'I stay here';
+  const alsoBlockScoped = 'Me too';
 }
-console.log(a); // 10
-// console.log(b); // ReferenceError
-// console.log(c); // ReferenceError`,
-            explanation: "`var` is function-scoped and visible outside the block; `let`/`const` are block-scoped."
-        },
-        {
-            code: `// Reassignment rules
-var x = 1;   x = 2;   // ok
-let y = 1;   y = 2;   // ok
-const z = 1;
-// z = 2; // TypeError: cannot reassign
-`,
-            explanation: "`const` locks the binding; use it by default, switch to `let` only when you truly need to reassign."
-        },
-        {
-            code: `// Hoisting and Temporal Dead Zone (TDZ)
-console.log(a); // undefined (var hoists and initializes)
-var a = 10;
 
-// Accessing before init throws for let/const
-// console.log(b); // ReferenceError (TDZ)
-let b = 20;`,
-            explanation: "`var` is hoisted and pre-initialized to undefined; `let`/`const` are hoisted but remain uninitialized (TDZ) until their line."
+console.log(functionScoped); // "I leak out!"
+// console.log(blockScoped); // ReferenceError
+// console.log(alsoBlockScoped); // ReferenceError`,
+            explanation: "`var` ignores block boundaries (like if/for loops), leaking into the outer function. `let`/`const` stay safely inside."
         },
         {
-            code: `// const with objects: reference fixed, contents mutable
+            code: `// 2. The "Loop Problem" (Closure + Scope)
+// OLD WAY (Buggy): var shares one 'i' variable
+for (var i = 0; i < 3; i++) {
+  setTimeout(() => console.log('var:', i), 100);
+}
+// Output: var: 3, var: 3, var: 3
+
+// MODERN WAY (Fixed): let creates a new 'j' for each loop
+for (let j = 0; j < 3; j++) {
+  setTimeout(() => console.log('let:', j), 100);
+}
+// Output: let: 0, let: 1, let: 2`,
+            explanation: "Using `let` in loops ensures each iteration gets its own independent variable binding, fixing async bugs."
+        },
+        {
+            code: `// 3. Const Mutability
 const user = { name: "Subhajit" };
-user.name = "Alex"; // ok (mutate property)
-// user = {};       // not ok (rebind)`,
-            explanation: "`const` freezes the reference, not the object's internals; use Object.freeze for deep immutability."
+
+// Allowed: Modifying the object's contents
+user.name = "Alex"; 
+console.log(user.name); // "Alex"
+
+// Forbidden: Replacing the object itself
+// user = { name: "New Person" }; // TypeError: Assignment to constant variable`,
+            explanation: "`const` protects the *variable binding* (the arrow pointing to memory), not the *value* (the object itself)."
+        },
+        {
+            code: `// 4. Temporal Dead Zone (TDZ) Safety
+console.log(myVar); // undefined (risky!)
+var myVar = 10;
+
+// console.log(myLet); // ReferenceError (safe!)
+let myLet = 20;`,
+            explanation: "TDZ ensures you don't use variables before they are ready. `var` lets you access them too early (as undefined), which hides bugs."
         }
     ],
 
@@ -78,14 +86,28 @@ user.name = "Alex"; // ok (mutate property)
         "**Async loops:** prefer `let` so each iteration gets its own binding (fixes the classic 'all threes' bug)."
     ],
 
-    memoryModel: `**Creation phase:**
-- Function environment created; var bindings hoisted + initialized to undefined.
-- Block environments created; let/const bindings hoisted but uninitialized (TDZ).
+    memoryModel: `**Storage Locations:**
+- **Primitives (number, boolean, undefined):** Stored directly in the **Stack** (fast access).
+- **Objects/Functions:** Stored in the **Heap** (large memory); the Stack holds a *reference* (pointer) to the Heap address.
 
-**Execution phase:**
-- Reading let/const before initialization throws (TDZ); var reads return undefined.
-- Each block/loop iteration with let/const creates a fresh lexical environment.
-- const fixes the identifier → reference can't change; the pointed object can, unless frozen.`,
+**Browser Execution Context:**
+- **Variables:** Stored in the Variable Environment of the current Execution Context (Stack).
+- **Closures:** Stored in the Heap (so they survive after the function returns).
+
+**Hardware:**
+- **CPU:** Executes the instructions (Stack operations are CPU-cache friendly).
+- **RAM:** Physical home for both Stack and Heap.
+
+**Creation Phase:**
+1. Engine parses code.
+2. Allocates memory for variables (hoisting).
+   - \`var\` → initialized to \`undefined\`.
+   - \`let/const\` → uninitialized (TDZ).
+
+**Execution Phase:**
+1. Code runs line-by-line.
+2. Assignments happen.
+3. Accessing TDZ variables throws errors.`,
 
     visualizationType: 'scopechain'
 };
