@@ -94,12 +94,12 @@ const CodeEditor = ({ initialCode = '', onRun, readOnly = false }) => {
     }, [output]);
 
     return (
-        <div className="flex flex-col h-full bg-[#1e1e1e] border-l border-brand-border">
+        <div className="flex flex-col h-full border-l border-brand-border" style={{ backgroundColor: 'var(--bg-surface)' }}>
             {/* Toolbar */}
-            <div className="flex items-center justify-between px-4 py-2 bg-brand-zinc border-b border-brand-border">
+            <div className="flex items-center justify-between px-4 py-2 border-b border-brand-border" style={{ backgroundColor: 'var(--bg-surface)' }}>
                 <div className="flex items-center space-x-2">
-                    <Code size={14} className="text-brand-lime" />
-                    <span className="text-xs font-bold text-gray-400 uppercase tracking-widest font-mono">Editor_Pane</span>
+                    <Code size={14} style={{ color: 'var(--accent-main)' }} />
+                    <span className="text-xs font-bold uppercase tracking-widest font-mono" style={{ color: 'var(--text-muted)' }}>Editor_Pane</span>
                 </div>
                 <div className="flex space-x-2">
                     {!readOnly && (
@@ -121,7 +121,7 @@ const CodeEditor = ({ initialCode = '', onRun, readOnly = false }) => {
                         height="100%"
                         defaultLanguage="javascript"
                         value={code}
-                        theme="vs-dark"
+                        theme={theme === 'dark' ? 'vs-dark' : 'vs-light'}
                         onChange={handleEditorChange}
                         options={{
                             minimap: { enabled: false },
@@ -138,27 +138,28 @@ const CodeEditor = ({ initialCode = '', onRun, readOnly = false }) => {
                 </div>
 
                 {/* Console Output - Fixed height section */}
-                <div className="h-[40%] flex-shrink-0 bg-[#0f1115] flex flex-col border-t border-brand-border">
-                    <div className="px-4 py-1.5 bg-[#151821] border-b border-brand-border flex justify-between items-center flex-shrink-0">
+                <div className="h-[40%] flex-shrink-0 flex flex-col border-t border-brand-border" style={{ backgroundColor: 'var(--bg-main)' }}>
+                    <div className="px-4 py-1.5 border-b border-brand-border flex justify-between items-center flex-shrink-0" style={{ backgroundColor: 'var(--bg-surface)' }}>
                         <div className="flex items-center space-x-2">
-                            <Terminal size={12} className="text-gray-200" />
-                            <span className="text-xs font-bold text-gray-100 uppercase tracking-widest font-mono">Console_Output</span>
+                            <Terminal size={12} style={{ color: 'var(--text-main)' }} />
+                            <span className="text-xs font-bold uppercase tracking-widest font-mono" style={{ color: 'var(--text-main)' }}>Console_Output</span>
                         </div>
                         <button
                             onClick={clearConsole}
-                            className="p-1 text-gray-400 hover:text-red-400 transition-colors"
+                            className="p-1 hover:text-red-400 transition-colors"
+                            style={{ color: 'var(--text-muted)' }}
                             title="Clear Console"
                         >
                             <Trash2 size={12} />
                         </button>
                     </div>
-                    <div ref={outputRef} className="flex-grow p-3 overflow-y-auto font-mono text-xs leading-relaxed bg-[#0c0d11]">
+                    <div ref={outputRef} className="flex-grow p-3 overflow-y-auto font-mono text-xs leading-relaxed" style={{ backgroundColor: 'var(--bg-main)' }}>
                         {output.length === 0 ? (
-                            <span className="text-gray-500 italic text-xs font-mono">Waiting for output...</span>
+                            <span className="italic text-xs font-mono" style={{ color: 'var(--text-muted)' }}>Waiting for output...</span>
                         ) : (
                             output.map((line, index) => (
-                                <div key={index} className={`mb-1 font-mono text-xs ${isError ? 'text-red-300' : 'text-gray-100'}`}>
-                                    <span className="text-brand-lime mr-2 font-bold">➜</span>
+                                <div key={index} className={`mb-1 font-mono text-xs ${isError ? 'text-red-500' : ''}`} style={{ color: isError ? undefined : 'var(--text-main)' }}>
+                                    <span style={{ color: 'var(--accent-main)' }} className="mr-2 font-bold">➜</span>
                                     {line}
                                 </div>
                             ))

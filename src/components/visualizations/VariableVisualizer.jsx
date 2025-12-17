@@ -41,15 +41,19 @@ const VariableVisualizer = ({ variables }) => {
                     border-radius: 12px;
                     padding: 16px;
                     position: relative;
-                    box-shadow: 0 0 20px rgba(163, 230, 53, 0.1);
+                    box-shadow: 4px 4px 0px rgba(var(--accent-main-rgb), 0.1);
                     border-bottom-width: 6px;
                     transition: transform 0.2s ease;
+                }
+                .variable-card:hover {
+                    transform: translate(-2px, -2px);
+                    box-shadow: 6px 6px 0px var(--accent-main);
                 }
                 .variable-card::after {
                     content: '';
                     position: absolute;
                     inset: 0;
-                    background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 100%);
+                    background: linear-gradient(135deg, rgba(255,255,255,0.05) 0%, transparent 100%);
                     pointer-events: none;
                 }
                 .card-label {

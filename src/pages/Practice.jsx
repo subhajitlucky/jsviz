@@ -22,10 +22,10 @@ const Practice = () => {
         <div className="min-h-screen pt-24 pb-12 px-4 sm:px-6 lg:px-8">
             <div className="max-w-7xl mx-auto">
                 <div className="mb-12 border-b border-brand-border pb-8">
-                    <h1 className="text-5xl font-bold text-white tracking-tighter mb-4">
+                    <h1 className="text-5xl font-bold tracking-tighter mb-4" style={{ color: 'var(--text-main)' }}>
                         PRACTICE_ARENA
                     </h1>
-                    <p className="text-gray-400 font-mono">
+                    <p className="font-mono" style={{ color: 'var(--text-muted)' }}>
                         Execute algorithmic challenges. Validate logic.
                     </p>
                 </div>
@@ -40,8 +40,9 @@ const Practice = () => {
                                 onClick={() => setFilter(diff)}
                                 className={`px-4 py-2 text-xs font-bold uppercase tracking-widest border transition-all ${filter === diff
                                         ? 'bg-brand-lime text-brand-black border-brand-lime'
-                                        : 'bg-transparent text-gray-400 border-brand-border hover:border-white hover:text-white'
+                                        : 'bg-transparent border-brand-border hover:border-[var(--text-main)] hover:text-[var(--text-main)]'
                                     }`}
+                                style={{ color: filter === diff ? 'var(--text-inverse)' : 'var(--text-muted)' }}
                             >
                                 {diff}
                             </button>
@@ -56,14 +57,15 @@ const Practice = () => {
                             placeholder="SEARCH_PROBLEMS..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full bg-brand-zinc border border-brand-border text-white pl-10 pr-4 py-2 font-mono text-sm focus:outline-none focus:border-brand-lime placeholder-gray-600"
+                            className="w-full bg-brand-zinc border border-brand-border px-4 pl-10 py-2 font-mono text-sm focus:outline-none focus:border-brand-lime placeholder-gray-600 transition-colors"
+                            style={{ color: 'var(--text-main)', backgroundColor: 'var(--bg-surface)' }}
                         />
                     </div>
                 </div>
 
                 {/* Problem List */}
-                <div className="border border-brand-border bg-brand-zinc">
-                    <div className="grid grid-cols-12 border-b border-brand-border bg-brand-black p-4 text-xs font-bold text-gray-500 uppercase tracking-widest">
+                <div className="border border-brand-border" style={{ backgroundColor: 'var(--bg-surface)' }}>
+                    <div className="grid grid-cols-12 border-b border-brand-border p-4 text-xs font-bold uppercase tracking-widest" style={{ backgroundColor: 'var(--bg-main)', color: 'var(--text-muted)' }}>
                         <div className="col-span-1">Status</div>
                         <div className="col-span-6 md:col-span-7">Problem</div>
                         <div className="col-span-3 md:col-span-2">Difficulty</div>
@@ -74,7 +76,7 @@ const Practice = () => {
                         {filteredProblems.map((problem) => {
                             const isSolved = progress.solvedProblems.includes(problem.id);
                             return (
-                                <li key={problem.id} className="group hover:bg-brand-black transition-colors">
+                                <li key={problem.id} className="group transition-colors" style={{ backgroundColor: 'var(--bg-surface)' }}>
                                     <Link to={`/problem/${problem.id}`} className="grid grid-cols-12 p-4 items-center">
                                         <div className="col-span-1">
                                             {isSolved ? (
@@ -85,10 +87,10 @@ const Practice = () => {
                                         </div>
 
                                         <div className="col-span-6 md:col-span-7 pr-4">
-                                            <p className={`text-lg font-bold truncate ${isSolved ? 'text-brand-lime' : 'text-white group-hover:text-brand-lime transition-colors'}`}>
+                                            <p className={`text-lg font-bold truncate ${isSolved ? 'text-brand-lime' : 'group-hover:text-brand-lime transition-colors'}`} style={{ color: isSolved ? undefined : 'var(--text-main)' }}>
                                                 {problem.title}
                                             </p>
-                                            <p className="text-xs text-gray-500 font-mono truncate hidden md:block mt-1">
+                                            <p className="text-xs font-mono truncate hidden md:block mt-1" style={{ color: 'var(--text-muted)' }}>
                                                 {problem.description}
                                             </p>
                                         </div>
