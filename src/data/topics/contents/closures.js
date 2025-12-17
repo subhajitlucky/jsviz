@@ -1,75 +1,86 @@
-const closuresContent = {
-    definition: "A closure is a function that has access to variables from its outer (enclosing) function's scope, even after the outer function has finished executing. Closures allow functions to 'remember' their lexical environment.",
+const closures = {
+    definition: "A **Closure** is the combination of a function and the **Lexical Environment** within which that function was declared. In simpler terms: a function 'remembers' its outer variables even after the outer function has finished executing.",
 
-    syntax: `function outerFunction(outerVariable) {
-  // Inner function has access to outerVariable
-  function innerFunction(innerVariable) {
-    console.log(outerVariable + innerVariable);
-  }
-  return innerFunction;
+    syntax: `function outer() {
+  const secret = "Pass123";
+  
+  return function inner() {
+    // inner is a closure
+    console.log(secret); 
+  };
 }
 
-const myFunction = outerFunction(10);
-myFunction(5); // Outputs: 15`,
+const reveal = outer();
+reveal(); // "Pass123" (secret is still alive!)
+`,
 
     examples: [
         {
-            code: `// Basic Closure
+            code: `// 1. Private State
 function createCounter() {
   let count = 0; // Private variable
   
   return {
-    increment: () => ++count,
-    decrement: () => --count,
-    getCount: () => count
+    increment() { return ++count; },
+    decrement() { return --count; }
   };
 }
 
 const counter = createCounter();
 console.log(counter.increment()); // 1
 console.log(counter.increment()); // 2
-console.log(counter.getCount());  // 2`,
-            explanation: "Closure creates private variables that can't be accessed directly"
+// count = 10; // ❌ ReferenceError (count is encapsulated)`,
+            explanation: "Closures are the primary way to create private variables in JavaScript. Only the functions returned by `createCounter` can access or modify `count`."
         },
         {
-            code: `// Factory Pattern with Closures
-function createGreeter(greeting) {
-  return function(name) {
-    return \`\${greeting}, \${name}!\`;
-  };
+            code: `// 2. Functional Currying
+function greet(greeting) {
+  return (name) => \`\${greeting}, \${name}\`;
 }
 
-const sayHello = createGreeter('Hello');
-const sayHi = createGreeter('Hi');
+const sayHi = greet("Hi");
+const sayHello = greet("Hello");
 
-console.log(sayHello('Alice')); // \"Hello, Alice!\"
-console.log(sayHi('Bob'));      // \"Hi, Bob!\"`,
-            explanation: "Each closure maintains its own copy of the outer variable"
+console.log(sayHi("Subhajit"));   // "Hi, Subhajit"
+console.log(sayHello("Alex")); // "Hello, Alex"`,
+            explanation: "Each call to `greet` creates a new environment. `sayHi` and `sayHello` are two different closures that 'remember' different `greeting` values."
+        },
+        {
+            code: `// 3. The "Classic" Interview Question
+for (var i = 1; i <= 3; i++) {
+  (function(capturedI) {
+    setTimeout(() => {
+      console.log('Closure val:', capturedI);
+    }, 1000);
+  })(i);
+}
+// Before 'let', we used IIFEs to create closures manually.`,
+            explanation: "In the old days of `var`, we used an **IIFE (Immediately Invoked Function Expression)** to create a closure and 'capture' the current value of `i` for each timer."
         }
     ],
 
     useCases: [
-        "**Data Privacy**: Create private variables and methods",
-        "**Function Factories**: Generate specialized functions",
-        "**Event Handlers**: Preserve state in callbacks",
-        "**Module Pattern**: Organize code with public/private APIs",
-        "**Memoization**: Cache expensive function results"
+        "**Encapsulation**: Creating private methods and properties (Module Pattern).",
+        "**Memoization**: Saving the results of expensive calculations.",
+        "**Event Handlers**: Preserving data associated with an element when a callback runs later.",
+        "**Functional Programming**: Currying and partial application of functions."
     ],
 
-    memoryModel: `**Closure Scope Chain:**
-Inner function maintains reference to outer function's variables
+    memoryModel: `### **Closures in Memory**
 
-**Memory:**
-- Outer function's activation record stays in memory
-- Inner function references outer scope (closure)
-- Garbage collector can't free outer scope
-- Memory persists until all references are gone
+**1. Heap Retention:**
+- Normally, when a function finishes, its **Stack Frame** is popped and variables are deleted.
+- If a closure exists, the engine moves the **Lexical Environment** from the **Stack** to the **Heap**.
+- This keeps those variables alive indefinitely.
 
-**Example:**
-createCounter() → returns object → count stays in memory`,
+**2. Memory Leaks:**
+- Closures prevent the **Garbage Collector** from freeing memory. 
+- If you create thousands of closures that you never use, your app will consume more and more **RAM**.
+
+**3. Reference Capture:**
+- A closure captures a **reference** to the variable, not a copy of its value. If the variable changes later, the closure will see the updated value.`,
 
     visualizationType: 'scopechain'
 };
 
-export default closuresContent;
-
+export default closures;

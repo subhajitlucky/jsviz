@@ -1,163 +1,121 @@
 import React, { useState, useEffect } from 'react';
+import VariableVisualizer from './visualizations/VariableVisualizer';
+import DataTypeVisualizer from './visualizations/DataTypeVisualizer';
+import CallStackVisualizer from './visualizations/CallStackVisualizer';
+import EventLoopVisualizer from './visualizations/EventLoopVisualizer';
+import PrototypeVisualizer from './visualizations/PrototypeVisualizer';
+import ArrayVisualizer from './visualizations/ArrayVisualizer';
+import { Cpu } from 'lucide-react';
 
 const VisualizerCanvas = ({ topicId, code, isRunning }) => {
     const [visualization, setVisualization] = useState(null);
 
     useEffect(() => {
         try {
-            if (topicId === 'variables' || topicId === 'variables-scope') {
-                const regex = /(?:let|const|var)\s+([\w$]+)\s*=\s*([^;]+);?/g;
+            // Logic for Variables, Scope, Operators
+            if (['variables', 'variables-scope', 'operators'].includes(topicId)) {
+                const varRegex = /(?:let|const|var)\s+([\w$]+)\s*=\s*([^;]+);?/g;
                 let match;
                 const variables = [];
-
-                while ((match = regex.exec(code)) !== null) {
-                    variables.push({ name: match[1], value: match[2] });
+                while ((match = varRegex.exec(code)) !== null) {
+                    variables.push({ name: match[1], value: match[2].trim() });
                 }
-
-                if (variables.length === 0) {
-                    setVisualization({
-                        type: 'empty',
-                        message: 'NO_VARIABLES_DETECTED — add a let/const/var assignment to visualize.'
-                    });
-                } else {
-                    setVisualization({
-                        type: 'variables',
-                        variables
-                    });
+                setVisualization({ type: 'variables', variables });
+            } 
+            // Logic for Data Types (Stack vs Heap)
+            else if (topicId === 'data-types') {
+                const stackItems = [];
+                const heapItems = [];
+                const varRegex = /(?:let|const|var)\s+([\w$]+)\s*=\s*([^;]+);?/g;
+                let match;
+                while ((match = varRegex.exec(code)) !== null) {
+                    const name = match[1];
+                    const val = match[2].trim();
+                    const isObj = val.startsWith('{') || val.startsWith('[') || val.includes('function') || val.includes('new ');
+                    
+                    if (isObj) {
+                        const addr = `0x${Math.floor(Math.random()*16777215).toString(16).toUpperCase()}`;
+                        stackItems.push({ name, value: addr, isRef: true });
+                        heapItems.push({ addr, content: val });
+                    } else {
+                        stackItems.push({ name, value: val, isRef: false });
+                    }
                 }
-            } else if (topicId === 'arrays') {
-                setVisualization({
-                    type: 'arrays'
-                });
-            } else {
-                setVisualization({
-                    type: 'default'
+                setVisualization({ type: 'datatypes', stack: stackItems, heap: heapItems });
+            }
+            // Logic for Call Stack / Functions
+            else if (['functions-basics', 'scope-chain', 'closures', 'execution-context', 'this-binding', 'function-methods', 'arguments-rest', 'arrow-functions', 'constructor-functions', 'classes'].includes(topicId)) {
+                const funcRegex = /function\s+([\w$]+)|([\w$]+)\s*\(|class\s+([\w$]+)/g;
+                let match;
+                const frames = ['Global Context'];
+                while ((match = funcRegex.exec(code)) !== null) {
+                    const name = match[1] || match[2] || match[3];
+                    if (name && !['console', 'log', 'if', 'for', 'while', 'switch'].includes(name)) {
+                        frames.push(`${name}()`);
+                    }
+                }
+                setVisualization({ type: 'callstack', frames: frames.reverse() });
+            }
+            // Logic for Event Loop / Async
+            else if (['event-loop', 'microtasks', 'promises', 'async-await', 'callbacks'].includes(topicId)) {
+                setVisualization({ 
+                    type: 'eventloop',
+                    hasMicro: code.includes('Promise') || code.includes('await') || code.includes('then'),
+                    hasMacro: code.includes('setTimeout') || code.includes('setInterval')
                 });
             }
+            // Logic for Prototype Chain
+            else if (topicId === 'prototype-chain') {
+                setVisualization({ type: 'prototype', chain: ['Instance', 'Prototype', 'Object.prototype', 'null'] });
+            }
+            // Logic for Arrays
+            else if (topicId === 'arrays') {
+                const arrayMatch = code.match(/\[(.*?)\]/);
+                const items = arrayMatch ? arrayMatch[1].split(',').map(s => s.trim()) : ['1', '2', '3'];
+                setVisualization({ type: 'arrays', items });
+            }
+            else {
+                setVisualization({ type: 'default' });
+            }
         } catch (err) {
-            console.error('Visualizer error:', err);
-            setVisualization({
-                type: 'error',
-                message: 'Visualization error. Please rerun.'
-            });
+            setVisualization({ type: 'error', message: 'Visualizer error.' });
         }
     }, [code, topicId]);
 
     const renderContent = () => {
-        if (!visualization) {
-            return (
-                <div className="flex items-center justify-center h-full">
-                    <p className="text-gray-600 font-mono text-xs">READY_TO_EXECUTE</p>
-                </div>
-            );
-        }
+        if (!visualization) return null;
 
         switch (visualization.type) {
-            case 'empty':
-                return (
-                    <div className="flex items-center justify-center h-full p-4">
-                        <div className="text-gray-600 font-mono text-xs bg-white/60 p-4 rounded border border-dashed border-gray-400">
-                            {visualization.message}
-                        </div>
-                    </div>
-                );
-
             case 'variables':
-                return (
-                    <div className="relative w-full h-full" style={{ background: 'rgba(15, 23, 42, 0.03)' }}>
-                        <div className="absolute top-3 left-4 text-xs font-mono text-gray-600 uppercase tracking-widest">
-                            Detected Variables
-                        </div>
-                        {visualization.variables.map((v, i) => (
-                            <div
-                                key={i}
-                                className="absolute border border-brand-lime bg-white shadow-md p-4 flex flex-col items-center justify-center w-36 h-36 rounded animate-fadeInUp"
-                                style={{
-                                    left: `${40 + (i * 160)}px`,
-                                    top: '60px',
-                                    animationDelay: `${i * 200}ms`
-                                }}
-                            >
-                                <div className="text-brand-lime font-bold text-lg mb-2">{v.value}</div>
-                                <div className="text-gray-700 text-xs font-mono uppercase tracking-wider">{v.name}</div>
-                            </div>
-                        ))}
-                    </div>
-                );
-
+                return <VariableVisualizer variables={visualization.variables} />;
+            case 'datatypes':
+                return <DataTypeVisualizer stack={visualization.stack} heap={visualization.heap} />;
+            case 'callstack':
+                return <CallStackVisualizer frames={visualization.frames} />;
+            case 'eventloop':
+                return <EventLoopVisualizer hasMicro={visualization.hasMicro} hasMacro={visualization.hasMacro} />;
+            case 'prototype':
+                return <PrototypeVisualizer chain={visualization.chain} />;
             case 'arrays':
-                return (
-                    <div className="relative w-full h-full">
-                        <div className="absolute top-2 left-10 text-brand-blue font-mono text-xs uppercase tracking-widest">
-                            Array_Index_Map
-                        </div>
-                        <div className="flex space-x-2 mt-20 ml-10">
-                            {[1, 2, 3, 4, 5].map((num, i) => (
-                                <div
-                                    key={i}
-                                    className="w-16 h-16 border border-brand-blue bg-brand-zinc flex items-center justify-center text-white font-bold text-xl rounded animate-scaleIn"
-                                    style={{
-                                        animationDelay: `${i * 100}ms`
-                                    }}
-                                >
-                                    {num}
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                );
-
+                return <ArrayVisualizer items={visualization.items} />;
             case 'error':
                 return (
-                    <div className="flex items-center justify-center h-full">
-                        <div className="text-center">
-                            <div className="w-16 h-16 border-2 border-dashed border-red-400 rounded-full animate-spin mx-auto mb-4"></div>
-                            <p className="text-red-500 font-mono text-xs">{visualization.message}</p>
-                        </div>
+                    <div className="flex items-center justify-center h-full p-4 text-red-400 font-mono text-xs">
+                        ⚠️ {visualization.message}
                     </div>
                 );
-
-            case 'default':
             default:
                 return (
-                    <div className="flex items-center justify-center h-full">
-                        <div className="text-center">
-                            <div className="w-16 h-16 border-2 border-dashed border-gray-600 rounded-full animate-spin mx-auto mb-4"></div>
-                            <p className="text-gray-500 font-mono text-xs">VISUALIZATION_PENDING...</p>
-                        </div>
+                    <div className="flex items-center justify-center h-full flex-col gap-4">
+                        <div className="w-12 h-12 border-4 border-dashed border-gray-200 rounded-full animate-spin"></div>
+                        <span className="text-[10px] font-mono text-gray-400 tracking-widest uppercase">Initializing_Dedicated_Vis...</span>
                     </div>
                 );
         }
     };
 
     return (
-        <div className="w-full h-full relative overflow-hidden">
-            <style>{`
-                @keyframes fadeInUp {
-                    from {
-                        opacity: 0;
-                        transform: translateY(-20px);
-                    }
-                    to {
-                        opacity: 1;
-                        transform: translateY(0);
-                    }
-                }
-                @keyframes scaleIn {
-                    from {
-                        transform: scale(0);
-                    }
-                    to {
-                        transform: scale(1);
-                    }
-                }
-                .animate-fadeInUp {
-                    animation: fadeInUp 0.5s ease-out forwards;
-                }
-                .animate-scaleIn {
-                    animation: scaleIn 0.3s ease-out forwards;
-                }
-            `}</style>
+        <div className="w-full h-full relative overflow-hidden bg-white/50">
             {renderContent()}
         </div>
     );

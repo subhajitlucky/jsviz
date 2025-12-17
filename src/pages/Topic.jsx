@@ -1,15 +1,15 @@
-import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect, useMemo } from 'react';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { getTopicById } from '../data/topics';
+import { topics, getTopicById } from '../data/topics';
 import { getTopicContent } from '../data/topics/contents';
 import CodeEditor from '../components/CodeEditor';
 import VisualizerCanvas from '../components/VisualizerCanvas';
 import useStore from '../store/useStore';
-import { CheckSquare, Code, Lightbulb, BookOpen, Cpu, Layers, Copy, Check } from 'lucide-react';
+import { CheckSquare, Code, Lightbulb, BookOpen, Cpu, Layers, Copy, Check, ArrowLeft, ArrowRight, List } from 'lucide-react';
 
 const Topic = () => {
     const { id } = useParams();
@@ -23,9 +23,22 @@ const Topic = () => {
     const [activeTab, setActiveTab] = useState('overview');
     const [copiedIndex, setCopiedIndex] = useState(null);
 
+    // Flatten all topics to find prev/next
+    const allTopicsFlattened = useMemo(() => {
+        return topics.flatMap(cat => cat.items);
+    }, []);
+
+    const currentIndex = useMemo(() => {
+        return allTopicsFlattened.findIndex(t => t.id === id);
+    }, [allTopicsFlattened, id]);
+
+    const prevTopic = allTopicsFlattened[currentIndex - 1];
+    const nextTopic = allTopicsFlattened[currentIndex + 1];
+
     useEffect(() => {
         if (topic && content) {
             setCode(content.examples[0]?.code || '// No example code available');
+            setActiveTab('overview'); // Reset tab on topic change
         }
     }, [topic, content]);
 
@@ -80,6 +93,9 @@ const Topic = () => {
                 <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                     <div className="flex-1">
                         <div className="flex items-center space-x-2 sm:space-x-3 mb-2 flex-wrap gap-2">
+                            <Link to="/learn" className="p-1.5 rounded hover:bg-gray-800 text-gray-400 transition-colors mr-1" title="Back to Topics">
+                                <List size={18} />
+                            </Link>
                             <span className="font-mono text-xs px-2 py-1 border" style={{ color: 'var(--accent-main)', borderColor: 'var(--accent-main)' }}>
                                 {topic.id.toUpperCase()}
                             </span>
@@ -90,13 +106,36 @@ const Topic = () => {
                         </div>
                         <p className="text-xs sm:text-sm font-mono" style={{ color: 'var(--text-muted)' }}>{topic.description}</p>
                     </div>
-                    <button
-                        onClick={handleComplete}
-                        className="neo-btn px-3 sm:px-4 py-2 text-xs sm:text-sm flex items-center gap-2 whitespace-nowrap"
-                    >
-                        <CheckSquare size={16} />
-                        {isCompleted ? 'COMPLETED' : 'MARK_COMPLETE'}
-                    </button>
+                    
+                    <div className="flex items-center gap-3">
+                        <div className="flex items-center bg-brand-zinc rounded p-1 border border-brand-border mr-2">
+                            <button
+                                onClick={() => prevTopic && navigate(`/topic/${prevTopic.id}`)}
+                                disabled={!prevTopic}
+                                className={`p-1.5 rounded ${!prevTopic ? 'opacity-30 cursor-not-allowed' : 'hover:bg-gray-700 text-white'}`}
+                                title={prevTopic ? `Previous: ${prevTopic.title}` : "No previous topic"}
+                            >
+                                <ArrowLeft size={18} />
+                            </button>
+                            <div className="w-px h-4 bg-brand-border mx-1"></div>
+                            <button
+                                onClick={() => nextTopic && navigate(`/topic/${nextTopic.id}`)}
+                                disabled={!nextTopic}
+                                className={`p-1.5 rounded ${!nextTopic ? 'opacity-30 cursor-not-allowed' : 'hover:bg-gray-700 text-white'}`}
+                                title={nextTopic ? `Next: ${nextTopic.title}` : "No next topic"}
+                            >
+                                <ArrowRight size={18} />
+                            </button>
+                        </div>
+
+                        <button
+                            onClick={handleComplete}
+                            className="neo-btn px-3 sm:px-4 py-2 text-xs sm:text-sm flex items-center gap-2 whitespace-nowrap"
+                        >
+                            <CheckSquare size={16} />
+                            {isCompleted ? 'COMPLETED' : 'MARK_COMPLETE'}
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -126,11 +165,11 @@ const Topic = () => {
             {/* Content Area - Stack on mobile, side-by-side on larger screens */}
             <div className="flex-grow w-full" style={{ backgroundColor: 'var(--bg-main)' }}>
                 <div className="max-w-7xl mx-auto w-full flex flex-col lg:flex-row gap-6 lg:gap-8 px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
-                {/* Left: Content */}
-                <div className="flex-1 overflow-y-auto order-2 lg:order-1">
-                    <div className="w-full space-y-8">
-                        {activeTab === 'overview' && (
-                            <div>
+                    {/* Left: Content */}
+                    <div className="flex-1 overflow-y-auto order-2 lg:order-1 min-w-0">
+                        <div className="space-y-8">
+                            {activeTab === 'overview' && (
+                                <div className="w-full">
                             <h2 className="text-lg sm:text-xl font-bold mb-4 flex items-center gap-2" style={{ color: 'var(--text-main)' }}>
                                 <BookOpen size={24} />
                                 What is {topic.title}?
@@ -269,35 +308,75 @@ const Topic = () => {
                                 {/* Visualization */}
                                 {content.visualizationType && (
                                     <div className="mt-8">
-                                        <h3 className="text-base sm:text-lg font-bold mb-4" style={{ color: 'var(--text-main)' }}>
-                                            Visual Representation
-                                        </h3>
-                                        <div className="neo-card p-4 sm:p-6 relative min-h-[250px] sm:min-h-[300px]" style={{ backgroundColor: 'var(--bg-surface)' }}>
+                                        <div className="flex items-center justify-between mb-4">
+                                            <h3 className="text-base sm:text-lg font-bold" style={{ color: 'var(--text-main)' }}>
+                                                Visual Representation
+                                            </h3>
+                                            <div className="flex items-center gap-2">
+                                                <span className="w-2 h-2 rounded-full bg-brand-lime animate-pulse"></span>
+                                                <span className="text-[10px] font-mono text-gray-500 uppercase tracking-widest">Live_Engine_Sim</span>
+                                            </div>
+                                        </div>
+                                        <div className="neo-card p-0 relative min-h-[400px] border-2 overflow-hidden" style={{ borderColor: 'var(--accent-main)', backgroundColor: 'var(--bg-surface)' }}>
                                             <VisualizerCanvas topicId={topic.id} code={code} isRunning={isRunning} />
                                         </div>
+                                        <p className="mt-3 text-[10px] font-mono text-center" style={{ color: 'var(--text-muted)' }}>
+                                            TIP: EDIT THE CODE ON THE RIGHT TO SEE THE VISUALIZATION UPDATE IN REAL-TIME.
+                                        </p>
                                     </div>
                                 )}
-                            </div>
-                        )}
-                    </div>
-                    </div>
+                                </div>
+                            )}
+                            
+                            {/* Bottom Navigation */}
+                            <div className="pt-12 border-t border-brand-border flex justify-between items-center gap-4">
+                                {prevTopic ? (
+                                    <button 
+                                        onClick={() => navigate(`/topic/${prevTopic.id}`)}
+                                        className="flex flex-col items-start group text-left max-w-[45%]"
+                                    >
+                                        <span className="text-[10px] font-mono text-gray-500 flex items-center gap-1 group-hover:text-[var(--accent-main)] transition-colors">
+                                            <ArrowLeft size={10} /> PREVIOUS_TOPIC
+                                        </span>
+                                        <span className="text-sm font-bold truncate w-full" style={{ color: 'var(--text-main)' }}>
+                                            {prevTopic.title}
+                                        </span>
+                                    </button>
+                                ) : <div />}
 
-                {/* Right: Interactive Code Editor */}
-                <div className="w-full lg:w-[600px] border-t lg:border-t-0 lg:border-l flex flex-col order-1 lg:order-2" style={{ borderColor: 'var(--border-main)', backgroundColor: '#1e1e1e', height: 'calc(100vh - 100px)', minHeight: '600px' }}>
-                    <div className="px-4 py-2 border-b flex items-center justify-between" style={{ borderColor: 'var(--border-main)', backgroundColor: '#252526' }}>
-                        <span className="text-xs font-bold uppercase tracking-wider text-gray-400">
-                            Interactive Editor
-                        </span>
-                        <div className="flex space-x-1">
-                            <div className="w-2 h-2 rounded-full bg-red-500"></div>
-                            <div className="w-2 h-2 rounded-full bg-yellow-500"></div>
-                            <div className="w-2 h-2 rounded-full bg-green-500"></div>
+                                {nextTopic ? (
+                                    <button 
+                                        onClick={() => navigate(`/topic/${nextTopic.id}`)}
+                                        className="flex flex-col items-end group text-right max-w-[45%]"
+                                    >
+                                        <span className="text-[10px] font-mono text-gray-500 flex items-center gap-1 group-hover:text-[var(--accent-main)] transition-colors">
+                                            NEXT_TOPIC <ArrowRight size={10} />
+                                        </span>
+                                        <span className="text-sm font-bold truncate w-full" style={{ color: 'var(--text-main)' }}>
+                                            {nextTopic.title}
+                                        </span>
+                                    </button>
+                                ) : <div />}
+                            </div>
                         </div>
                     </div>
-                    <div className="flex-grow overflow-hidden">
-                        <CodeEditor initialCode={code} onRun={handleRun} />
+
+                    {/* Right: Interactive Code Editor */}
+                    <div className="w-full lg:w-[500px] border-t lg:border-t-0 lg:border-l flex flex-col order-1 lg:order-2" style={{ borderColor: 'var(--border-main)', backgroundColor: '#1e1e1e', maxHeight: '600px', minHeight: '400px' }}>
+                        <div className="px-4 py-2 border-b flex items-center justify-between" style={{ borderColor: 'var(--border-main)', backgroundColor: '#252526' }}>
+                            <span className="text-xs font-bold uppercase tracking-wider text-gray-400">
+                                Interactive Editor
+                            </span>
+                            <div className="flex space-x-1">
+                                <div className="w-2 h-2 rounded-full bg-red-500"></div>
+                                <div className="w-2 h-2 rounded-full bg-yellow-500"></div>
+                                <div className="w-2 h-2 rounded-full bg-green-500"></div>
+                            </div>
+                        </div>
+                        <div className="flex-grow overflow-hidden">
+                            <CodeEditor initialCode={code} onRun={handleRun} />
+                        </div>
                     </div>
-                </div>
                 </div>
             </div>
         </div>

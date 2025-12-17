@@ -1,89 +1,73 @@
-const promisesContent = {
-    definition: "Promises are objects representing the eventual completion (or failure) of an asynchronous operation. They provide a cleaner alternative to callbacks for handling async code.",
+const promises = {
+    definition: "A **Promise** is a proxy for a value not necessarily known when the promise is created. It allows you to associate handlers with an asynchronous action's eventual success value or failure reason.",
 
-    syntax: `// Creating a Promise
-const promise = new Promise((resolve, reject) => {
-  // Async operation
-  if (success) {
-    resolve(value);
-  } else {
-    reject(error);
-  }
+    syntax: `// 1. Creation
+const p = new Promise((resolve, reject) => {
+  if (success) resolve("Data");
+  else reject("Error");
 });
 
-// Consuming a Promise
-promise
-  .then(value => { /* handle success */ })
-  .catch(error => { /* handle error */ })
-  .finally(() => { /* cleanup */ });`,
+// 2. Consumption
+p.then(data => console.log(data))
+ .catch(err => console.error(err))
+ .finally(() => console.log("Done"));
+`,
 
     examples: [
         {
-            code: `// Basic Promise
-const fetchData = () => {
-  return new Promise((resolve, reject) => {
-    setTimeout(() => {
-      const data = { id: 1, name: 'Alice' };
-      resolve(data);
-    }, 1000);
-  });
-};
-
-fetchData()
-  .then(data => console.log(data))
-  .catch(err => console.error(err));`,
-            explanation: "Promise wraps async operation with resolve/reject"
+            code: `// 1. Chaining Promises
+fetchUser(1)
+  .then(user => fetchPosts(user.id))
+  .then(posts => console.log(posts[0]))
+  .catch(err => console.log("Failed somewhere:", err));`,
+            explanation: "Promises solve 'Callback Hell' by allowing you to chain async operations vertically instead of nesting them horizontally."
         },
         {
-            code: `// Promise Chaining
-fetch('/api/user')
-  .then(response => response.json())
-  .then(user => fetch(\`/api/posts/\${user.id}\`))
-  .then(response => response.json())
-  .then(posts => console.log(posts))
-  .catch(error => console.error(error));`,
-            explanation: "Chain multiple async operations sequentially"
+            code: `// 2. Promise Combinators
+const p1 = Promise.resolve(10);
+const p2 = new Promise(res => setTimeout(() => res(20), 100));
+
+Promise.all([p1, p2]).then(values => {
+  console.log(values); // [10, 20]
+});`,
+            explanation: "`Promise.all` waits for ALL promises to fulfill. If any one fails, the whole thing rejects immediately. Great for parallel requests."
         },
         {
-            code: `// Promise.all - Parallel Execution
-const promise1 = fetch('/api/users');
-const promise2 = fetch('/api/posts');
-const promise3 = fetch('/api/comments');
-
-Promise.all([promise1, promise2, promise3])
-  .then(([users, posts, comments]) => {
-    console.log('All data loaded!');
-  })
-  .catch(error => console.error(error));`,
-            explanation: "Execute multiple promises in parallel, wait for all"
+            code: `// 3. Race & Any
+Promise.race([
+  fetch('/api'),
+  new Promise((_, reject) => setTimeout(() => reject("Timeout"), 5000))
+]);`,
+            explanation: "`Promise.race` returns the result of the first promise that finishes (either success or failure). It's commonly used to implement timeouts."
         }
     ],
 
     useCases: [
-        "**API Calls**: Fetch data from servers (fetch, axios)",
-        "**File Operations**: Read/write files (Node.js)",
-        "**Database Queries**: Async database operations",
-        "**Sequential Tasks**: Chain dependent async operations",
-        "**Parallel Tasks**: Run multiple independent operations simultaneously"
+        "**API Calls**: Fetching data from a server.",
+        "**Image Loading**: Waiting for an asset to load before showing it.",
+        "**Database Queries**: Asynchronous interactions with a DB.",
+        "**Concurrency**: Running multiple tasks at once and waiting for the results."
     ],
 
-    memoryModel: `**Promise States:**
-1. **Pending**: Initial state, operation in progress
-2. **Fulfilled**: Operation completed successfully (resolve)
-3. **Rejected**: Operation failed (reject)
+    memoryModel: `### **The Lifecycle**
 
-**Event Loop:**
-- Promises use microtask queue
-- Executed before the next macrotask
-- Higher priority than setTimeout callbacks
+**1. States:**
+- **Pending**: Initial state, neither fulfilled nor rejected.
+- **Fulfilled**: Operation completed successfully.
+- **Rejected**: Operation failed.
 
-**Memory:**
-- Promise object stores state and result value
-- Callback functions stored until promise settles
-- Settled promises can be garbage collected if unreferenced`,
+**2. Storage:**
+- A Promise is an object in the **Heap**. 
+- It maintains a list of 'reaction' records (the functions you passed to \`.then\`).
+
+**3. Execution (Microtasks):**
+- When a promise resolves, its callbacks are pushed to the **Microtask Queue**.
+- They are processed as soon as the **Call Stack** is empty.
+
+**4. Garbage Collection:**
+- A Promise object stays in the **RAM** until it is settled and there are no more \`.then()\` or \`.catch()\` references to it.`,
 
     visualizationType: 'eventloop'
 };
 
-export default promisesContent;
-
+export default promises;
