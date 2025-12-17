@@ -3,98 +3,109 @@ import anime from 'animejs';
 
 const PrototypeVisualizer = ({ chain }) => {
     useEffect(() => {
+        // Node entry
         anime({
-            targets: '.chain-node',
-            translateX: [-100, 0],
+            targets: '.proto-node',
+            translateY: [50, 0],
             opacity: [0, 1],
+            scale: [0.9, 1],
             delay: anime.stagger(200),
-            easing: 'easeOutExpo'
+            easing: 'easeOutElastic(1, .8)'
         });
 
+        // Connector pulse
         anime({
-            targets: '.chain-arrow',
-            scaleY: [0, 1],
-            opacity: [0, 1],
-            delay: anime.stagger(200, { start: 100 }),
-            easing: 'linear'
+            targets: '.proto-line',
+            opacity: [0.2, 1],
+            duration: 1000,
+            loop: true,
+            direction: 'alternate',
+            easing: 'easeInOutQuad',
+            delay: anime.stagger(200)
         });
     }, [chain]);
 
     return (
-        <div className="h-full w-full bg-[#0f172a]/5 p-8 flex flex-col items-center overflow-y-auto">
+        <div className="h-full w-full p-8 flex flex-col items-center overflow-y-auto relative" style={{ backgroundColor: 'transparent' }}>
             <style>{`
-                .chain-node {
-                    background: white;
-                    border: 2px solid #14b8a6;
-                    border-radius: 9999px;
-                    padding: 12px 24px;
-                    min-width: 180px;
+                .proto-node {
+                    background: var(--bg-surface);
+                    border: 3px solid #14b8a6;
+                    border-radius: 16px;
+                    padding: 16px 32px;
+                    min-width: 200px;
                     text-align: center;
-                    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
                     position: relative;
                     z-index: 2;
+                    box-shadow: 0 10px 20px rgba(20, 184, 166, 0.1);
                 }
-                .node-label {
+                .node-title {
                     font-family: 'JetBrains Mono', monospace;
-                    font-weight: 800;
-                    font-size: 13px;
-                    color: #134e4a;
+                    font-weight: 900;
+                    font-size: 14px;
+                    color: var(--text-main);
                 }
-                .chain-arrow {
-                    width: 2px;
+                .proto-line {
+                    width: 4px;
                     height: 40px;
-                    background: #99f6e4;
+                    background: #14b8a6;
+                    margin: -2px 0;
                     position: relative;
                     z-index: 1;
                 }
-                .chain-arrow::after {
+                .proto-line::after {
                     content: '';
                     position: absolute;
                     bottom: -2px;
                     left: 50%;
                     transform: translateX(-50%);
-                    border-left: 6px solid transparent;
-                    border-right: 6px solid transparent;
-                    border-top: 8px solid #99f6e4;
+                    border-left: 8px solid transparent;
+                    border-right: 8px solid transparent;
+                    border-top: 10px solid #14b8a6;
                 }
-                .proto-tag {
+                .link-label {
                     position: absolute;
-                    right: -100px;
+                    right: -110px;
                     top: 50%;
                     transform: translateY(-50%);
-                    font-size: 8px;
+                    font-size: 9px;
                     font-family: monospace;
-                    color: #94a3b8;
+                    color: #14b8a6;
+                    background: rgba(20, 184, 166, 0.05);
+                    padding: 4px 10px;
+                    border-radius: 99px;
+                    border: 1px solid rgba(20, 184, 166, 0.2);
                     white-space: nowrap;
-                    background: #f8fafc;
-                    padding: 2px 8px;
-                    border-radius: 9999px;
-                    border: 1px solid #e2e8f0;
                 }
             `}</style>
 
-            <div className="self-start mb-12">
-                <h3 className="text-xs font-mono font-bold text-gray-500 uppercase tracking-widest">Prototype Inheritance Chain</h3>
+            <div className="self-start mb-12 flex items-center gap-3">
+                <div className="w-2 h-2 rounded-full bg-teal-500 shadow-[0_0_10px_teal]"></div>
+                <h3 className="text-xs font-mono font-bold text-gray-500 uppercase tracking-widest">Delegation_Chain_Mapper</h3>
             </div>
 
             <div className="flex flex-col items-center">
                 {chain.map((level, i) => (
                     <React.Fragment key={i}>
-                        <div className="chain-node">
-                            <div className="node-label">{level}</div>
-                            {i < chain.length - 1 && <div className="proto-tag">[[Prototype]]</div>}
+                        <div className="proto-node">
+                            <div className="node-title">{level}</div>
+                            <div className="text-[8px] text-gray-400 mt-1 uppercase">[[Internal_Slot]]</div>
+                            {i < chain.length - 1 && (
+                                <div className="link-label">points_to_parent</div>
+                            )}
                         </div>
-                        {i < chain.length - 1 && <div className="chain-arrow"></div>}
+                        {i < chain.length - 1 && <div className="proto-line"></div>}
                     </React.Fragment>
                 ))}
             </div>
 
-            <div className="mt-12 text-[10px] font-mono text-gray-400 text-center uppercase tracking-tighter max-w-xs">
-                Property lookup walks up the chain until it finds the key or hits null
+            <div className="mt-12 p-6 border-2 border-dashed border-teal-500/20 rounded-xl max-w-sm">
+                <p className="text-[10px] font-mono text-gray-400 text-center leading-relaxed">
+                    Property lookup walks UP the chain. If a key isn't found, the engine follows the link to the parent until it hits NULL.
+                </p>
             </div>
         </div>
     );
 };
 
 export default PrototypeVisualizer;
-

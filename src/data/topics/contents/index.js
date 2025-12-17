@@ -28,6 +28,10 @@ import microtasks from './microtasks';
 import promises from './promises';
 import asyncAwait from './asyncAwait';
 import modules from './modules';
+import propertyDescriptors from './propertyDescriptors';
+import iterationProtocols from './iterationProtocols';
+import mapSet from './mapSet';
+import generators from './generators';
 import functionsContent from './functions';
 
 export const topicContents = {
@@ -60,6 +64,10 @@ export const topicContents = {
     'promises': promises,
     'async-await': asyncAwait,
     'modules': modules,
+    'property-descriptors': propertyDescriptors,
+    'iteration-protocols': iterationProtocols,
+    'map-set': mapSet,
+    'generators': generators,
     variables,
     functions: functionsContent,
 };

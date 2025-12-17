@@ -3,119 +3,153 @@ import anime from 'animejs';
 
 const DataTypeVisualizer = ({ stack, heap }) => {
     useEffect(() => {
+        // Stack entries
         anime({
-            targets: '.stack-item',
-            translateX: [-50, 0],
+            targets: '.stack-frame-box',
+            translateX: [-100, 0],
             opacity: [0, 1],
-            delay: anime.stagger(100),
-            easing: 'easeOutQuad'
+            rotate: [10, 0],
+            delay: anime.stagger(150),
+            easing: 'easeOutElastic(1, .8)'
         });
 
+        // Heap blobs
         anime({
-            targets: '.heap-item',
+            targets: '.heap-blob',
             scale: [0, 1],
-            rotate: '1turn',
             opacity: [0, 1],
+            rotate: () => anime.random(-15, 15),
             delay: anime.stagger(200),
             easing: 'easeOutElastic(1, .5)'
+        });
+
+        // Animation for reference lines (glow effect)
+        anime({
+            targets: '.ref-glow',
+            opacity: [0.2, 0.8],
+            duration: 1500,
+            loop: true,
+            direction: 'alternate',
+            easing: 'easeInOutQuad'
         });
     }, [stack, heap]);
 
     return (
-        <div className="h-full w-full flex bg-[#0f172a]/5 overflow-hidden p-4 gap-4">
+        <div className="h-full w-full flex p-4 gap-6 overflow-hidden" style={{ backgroundColor: 'transparent' }}>
             <style>{`
-                .memory-lane {
+                .memory-sector {
                     flex: 1;
                     height: 100%;
-                    background: white;
-                    border-radius: 16px;
-                    border: 1px solid #e2e8f0;
+                    background: rgba(0,0,0,0.03);
+                    border: 2px solid var(--border-main);
+                    border-radius: 20px;
                     display: flex;
-                    flex-col;
+                    flex-direction: column;
                     overflow: hidden;
-                    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+                    position: relative;
                 }
-                .lane-header {
-                    padding: 12px;
+                .sector-header {
+                    padding: 14px;
                     font-family: 'JetBrains Mono', monospace;
                     font-size: 10px;
-                    font-weight: 800;
+                    font-weight: 900;
                     text-transform: uppercase;
-                    border-bottom: 1px solid #f1f5f9;
+                    border-bottom: 2px solid var(--border-main);
+                    background: var(--bg-surface);
                     display: flex;
                     align-items: center;
-                    gap: 8px;
+                    justify-content: space-between;
                 }
-                .stack-item {
-                    margin: 8px;
-                    padding: 12px;
-                    background: #f8fafc;
-                    border-left: 4px solid #a3e635;
-                    border-radius: 4px;
+                .stack-frame-box {
+                    margin: 8px 12px;
+                    padding: 14px;
+                    background: var(--bg-surface);
+                    border: 2px solid var(--accent-main);
+                    border-radius: 8px;
+                    box-shadow: 4px 4px 0px var(--accent-main);
                     display: flex;
                     justify-content: space-between;
                     align-items: center;
-                    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
                 }
-                .heap-item {
-                    margin: 8px;
+                .heap-blob {
+                    margin: 10px;
                     padding: 16px;
-                    background: #eff6ff;
+                    background: var(--bg-surface);
                     border: 2px solid #3b82f6;
-                    border-radius: 12px;
-                    width: calc(100% - 16px);
-                    box-shadow: 0 4px 6px rgba(59, 130, 246, 0.1);
+                    border-radius: 16px;
+                    position: relative;
+                    box-shadow: 0 10px 25px -5px rgba(59, 130, 246, 0.2);
                 }
-                .pointer-line {
-                    color: #3b82f6;
-                    font-weight: bold;
+                .ref-glow {
+                    position: absolute;
+                    right: 8px;
+                    top: 50%;
+                    transform: translateY(-50%);
+                    width: 8px;
+                    height: 8px;
+                    background: #3b82f6;
+                    border-radius: 50%;
+                    box-shadow: 0 0 15px #3b82f6;
+                }
+                .addr-chip {
                     font-family: monospace;
-                    font-size: 10px;
+                    font-size: 8px;
+                    color: #3b82f6;
+                    background: rgba(59, 130, 246, 0.1);
+                    padding: 2px 6px;
+                    border-radius: 4px;
+                    margin-bottom: 8px;
+                    display: inline-block;
+                }
+                .content-text {
+                    font-size: 12px;
+                    color: var(--text-main);
+                    font-family: 'JetBrains Mono', monospace;
+                    word-break: break-all;
                 }
             `}</style>
 
-            {/* STACK */}
-            <div className="memory-lane flex-col">
-                <div className="lane-header text-brand-lime">
-                    <div className="w-2 h-2 rounded-full bg-brand-lime"></div>
-                    The Stack (Fast)
+            {/* CALL STACK SECTION */}
+            <div className="memory-sector">
+                <div className="sector-header" style={{ color: 'var(--accent-main)' }}>
+                    <span>⚡ LIFO_STACK</span>
+                    <span className="text-[8px] opacity-50">Fast_Access</span>
                 </div>
                 <div className="flex-grow overflow-y-auto p-2 flex flex-col-reverse">
                     {stack.map((s, i) => (
-                        <div key={i} className="stack-item">
+                        <div key={i} className="stack-frame-box">
                             <div className="flex flex-col">
-                                <span className="text-[9px] text-gray-400 font-mono uppercase">{s.name}</span>
-                                <span className={`text-xs font-bold ${s.isRef ? 'text-blue-600' : 'text-gray-800'}`}>
+                                <span className="text-[8px] text-gray-500 font-mono mb-1">{s.name}</span>
+                                <span className={`text-xs font-bold ${s.isRef ? 'text-blue-500' : 'text-gray-800'}`} style={{ color: s.isRef ? '#3b82f6' : 'var(--text-main)' }}>
                                     {s.value}
                                 </span>
                             </div>
-                            {s.isRef && <span className="pointer-line">→ HEAP</span>}
+                            {s.isRef && <div className="ref-glow"></div>}
                         </div>
                     ))}
-                    <div className="p-4 text-center text-[10px] text-gray-300 font-mono italic mt-4 border-t border-dashed">
-                        ↑ BOTTOM_OF_STACK
+                    <div className="mt-4 p-6 text-center text-[10px] text-gray-400 font-mono border-t border-dashed">
+                        --- SYSTEM_BASE ---
                     </div>
                 </div>
             </div>
 
-            {/* HEAP */}
-            <div className="memory-lane flex-col">
-                <div className="lane-header text-blue-500">
-                    <div className="w-2 h-2 rounded-full bg-blue-500"></div>
-                    The Heap (Deep)
+            {/* HEAP SECTION */}
+            <div className="memory-sector">
+                <div className="sector-header" style={{ color: '#3b82f6' }}>
+                    <span>📦 DYNAMIC_HEAP</span>
+                    <span className="text-[8px] opacity-50">Large_Memory</span>
                 </div>
                 <div className="flex-grow overflow-y-auto p-2">
                     {heap.map((h, i) => (
-                        <div key={i} className="heap-item">
-                            <div className="text-[8px] font-mono text-blue-400 mb-2 uppercase">Address: {h.addr}</div>
-                            <div className="text-sm font-bold text-blue-900 font-mono break-all bg-white p-2 rounded border border-blue-100">
-                                {h.content}
-                            </div>
+                        <div key={i} className="heap-blob">
+                            <div className="addr-chip">ADDR: {h.addr}</div>
+                            <div className="content-text">{h.content}</div>
                         </div>
                     ))}
                     {heap.length === 0 && (
-                        <div className="h-full flex items-center justify-center text-gray-300 font-mono text-xs uppercase text-center p-8 opacity-50">
-                            No objects currently in heap memory
+                        <div className="h-full flex flex-col items-center justify-center opacity-20 scale-75">
+                            <div className="w-20 h-20 border-4 border-dashed rounded-full animate-spin"></div>
+                            <span className="mt-4 font-mono text-[10px]">No_Heap_Objects</span>
                         </div>
                     )}
                 </div>
@@ -125,4 +159,3 @@ const DataTypeVisualizer = ({ stack, heap }) => {
 };
 
 export default DataTypeVisualizer;
-

@@ -3,85 +3,121 @@ import anime from 'animejs';
 
 const ArrayVisualizer = ({ items }) => {
     useEffect(() => {
+        // Slot entry
         anime({
-            targets: '.array-slot',
+            targets: '.array-card',
             scale: [0.5, 1],
+            rotateY: [90, 0],
             opacity: [0, 1],
-            translateY: [20, 0],
-            delay: anime.stagger(80),
+            delay: anime.stagger(100),
             easing: 'easeOutElastic(1, .8)'
+        });
+
+        // Scan pointer
+        anime({
+            targets: '.scan-marker',
+            translateX: [0, (items.length - 1) * 80],
+            duration: 3000,
+            loop: true,
+            direction: 'alternate',
+            easing: 'easeInOutQuad'
         });
     }, [items]);
 
     return (
-        <div className="h-full w-full bg-[#0f172a]/5 p-8 flex flex-col items-center justify-center overflow-x-auto">
+        <div className="h-full w-full p-8 flex flex-col items-center justify-center overflow-x-auto relative" style={{ perspective: '1000px' }}>
             <style>{`
-                .array-container {
+                .array-tape {
                     display: flex;
-                    gap: 8px;
+                    gap: 12px;
                     padding: 40px;
-                    background: white;
-                    border-radius: 20px;
-                    border: 2px solid #e2e8f0;
-                    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+                    background: var(--bg-surface);
+                    border: 3px solid var(--border-main);
+                    border-radius: 24px;
+                    position: relative;
+                    box-shadow: inset 0 4px 10px rgba(0,0,0,0.05);
                 }
-                .array-slot {
+                .array-card {
                     display: flex;
                     flex-direction: column;
                     align-items: center;
                     gap: 12px;
-                }
-                .slot-index {
-                    font-family: 'JetBrains Mono', monospace;
-                    font-size: 10px;
-                    font-weight: 800;
-                    color: #94a3b8;
-                    background: #f8fafc;
-                    padding: 2px 8px;
-                    border-radius: 4px;
+                    min-width: 68px;
                 }
                 .slot-box {
-                    width: 60px;
-                    height: 60px;
-                    background: #eff6ff;
+                    width: 68px;
+                    height: 68px;
+                    background: var(--bg-surface);
                     border: 3px solid #3b82f6;
                     border-radius: 12px;
                     display: flex;
                     align-items: center;
                     justify-content: center;
                     font-family: 'JetBrains Mono', monospace;
-                    font-weight: 700;
-                    font-size: 18px;
-                    color: #1e40af;
-                    box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.2);
+                    font-weight: 900;
+                    font-size: 20px;
+                    color: #3b82f6;
+                    box-shadow: 0 10px 20px rgba(59, 130, 246, 0.1);
+                    position: relative;
                 }
-                .slot-address {
+                .slot-idx {
+                    font-family: 'JetBrains Mono', monospace;
+                    font-size: 10px;
+                    font-weight: 800;
+                    color: var(--text-muted);
+                    background: rgba(0,0,0,0.05);
+                    padding: 2px 8px;
+                    border-radius: 4px;
+                }
+                .mem-ptr {
                     font-family: monospace;
                     font-size: 8px;
-                    color: #cbd5e1;
+                    color: #94a3b8;
+                    opacity: 0.6;
+                }
+                .scan-marker {
+                    position: absolute;
+                    top: 20px;
+                    left: 70px;
+                    width: 12px;
+                    height: 12px;
+                    background: #ef4444;
+                    border-radius: 50%;
+                    box-shadow: 0 0 15px #ef4444;
+                    z-index: 5;
                 }
             `}</style>
 
-            <div className="self-start mb-12">
-                <h3 className="text-xs font-mono font-bold text-gray-500 uppercase tracking-widest">Contiguous Memory Map (Array)</h3>
+            <div className="self-start mb-12 flex items-center gap-3">
+                <div className="w-3 h-3 rounded-sm bg-blue-500 animate-pulse"></div>
+                <h3 className="text-xs font-mono font-bold text-gray-500 uppercase tracking-widest">Contiguous_Memory_Array</h3>
             </div>
 
-            <div className="array-container">
+            <div className="array-tape">
+                <div className="scan-marker"></div>
                 {items.map((item, i) => (
-                    <div key={i} className="array-slot">
-                        <div className="slot-index">idx_{i}</div>
-                        <div className="slot-box">{item}</div>
-                        <div className="slot-address">0x{((i + 1) * 16).toString(16).toUpperCase()}</div>
+                    <div key={i} className="array-card">
+                        <div className="slot-idx">idx[{i}]</div>
+                        <div className="slot-box">
+                            {item}
+                        </div>
+                        <div className="mem-ptr">0x{((i + 1) * 0x10).toString(16).toUpperCase()}</div>
                     </div>
                 ))}
             </div>
 
-            <div className="mt-12 text-[10px] font-mono text-gray-400 uppercase tracking-tighter">
-                Random Access Memory (O(1) Access)
+            <div className="mt-12 flex gap-10 opacity-50">
+                <div className="flex flex-col items-center">
+                    <span className="text-[10px] font-bold text-gray-400">O(1)</span>
+                    <span className="text-[8px] font-mono uppercase">Read_Access</span>
+                </div>
+                <div className="flex flex-col items-center">
+                    <span className="text-[10px] font-bold text-gray-400">Sequential</span>
+                    <span className="text-[8px] font-mono uppercase">Memory_Order</span>
+                </div>
             </div>
         </div>
     );
 };
 
 export default ArrayVisualizer;
-

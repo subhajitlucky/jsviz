@@ -3,93 +3,111 @@ import anime from 'animejs';
 
 const CallStackVisualizer = ({ frames }) => {
     useEffect(() => {
+        // Frames dropping in
         anime({
-            targets: '.stack-frame',
-            translateY: [40, 0],
+            targets: '.frame-card',
+            translateY: [-100, 0],
             opacity: [0, 1],
-            scale: [0.8, 1],
-            delay: anime.stagger(150),
+            rotateX: [-45, 0],
+            delay: anime.stagger(100),
             easing: 'easeOutElastic(1, .8)'
+        });
+
+        // Current instruction pointer
+        anime({
+            targets: '.active-pointer',
+            translateX: [-5, 5],
+            duration: 800,
+            loop: true,
+            direction: 'alternate',
+            easing: 'easeInOutSine'
         });
     }, [frames]);
 
     return (
-        <div className="h-full w-full flex flex-col items-center bg-[#0f172a]/5 p-8 overflow-hidden">
+        <div className="h-full w-full flex flex-col items-center p-8 overflow-hidden" style={{ perspective: '1000px' }}>
             <style>{`
-                .stack-container {
+                .stack-shaft {
                     width: 100%;
-                    max-width: 320px;
+                    max-width: 300px;
                     display: flex;
                     flex-direction: column-reverse;
-                    gap: 12px;
+                    gap: 16px;
                     position: relative;
+                    padding: 20px;
+                    background: rgba(0,0,0,0.02);
+                    border-radius: 20px;
+                    border: 2px solid var(--border-main);
                 }
-                .stack-frame {
-                    background: white;
+                .frame-card {
+                    background: var(--bg-surface);
                     border: 3px solid #3b82f6;
                     border-radius: 12px;
                     padding: 20px;
-                    text-align: center;
-                    box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.2);
                     position: relative;
+                    box-shadow: 0 10px 30px rgba(59, 130, 246, 0.15);
+                    transform-style: preserve-3d;
+                }
+                .frame-card.active {
+                    border-color: var(--accent-main);
+                    box-shadow: 0 0 20px rgba(163, 230, 53, 0.3);
                 }
                 .frame-title {
                     font-family: 'JetBrains Mono', monospace;
-                    font-weight: 800;
-                    font-size: 14px;
-                    color: #1e3a8a;
+                    font-weight: 900;
+                    font-size: 15px;
+                    color: var(--text-main);
                 }
-                .execution-cursor {
+                .active-pointer {
                     position: absolute;
-                    left: -40px;
+                    left: -45px;
                     top: 50%;
                     transform: translateY(-50%);
-                    color: #3b82f6;
-                    animation: bounceRight 1s infinite alternate;
+                    color: var(--accent-main);
                 }
-                @keyframes bounceRight {
-                    from { transform: translate(-5px, -50%); }
-                    to { transform: translate(5px, -50%); }
-                }
-                .stack-base {
+                .stack-foundation {
                     width: 100%;
-                    max-width: 400px;
-                    height: 12px;
-                    background: #cbd5e1;
-                    border-radius: 6px;
-                    margin-top: 20px;
+                    max-width: 360px;
+                    height: 16px;
+                    background: var(--border-main);
+                    border-radius: 8px;
+                    margin-top: 24px;
+                    box-shadow: 0 4px 0 rgba(0,0,0,0.1);
                 }
             `}</style>
 
-            <div className="self-start mb-8">
-                <h3 className="text-xs font-mono font-bold text-gray-500 uppercase tracking-widest">Global Call Stack</h3>
+            <div className="w-full flex justify-between items-center mb-10 max-w-md">
+                <h3 className="text-xs font-mono font-bold text-gray-500 uppercase tracking-widest">CPU_CALL_STACK</h3>
+                <div className="flex gap-2">
+                    <div className="w-2 h-2 rounded-full bg-red-400"></div>
+                    <div className="w-2 h-2 rounded-full bg-yellow-400"></div>
+                    <div className="w-2 h-2 rounded-full bg-green-400"></div>
+                </div>
             </div>
 
-            <div className="stack-container">
+            <div className="stack-shaft">
                 {frames.map((frame, i) => (
-                    <div key={i} className="stack-frame">
+                    <div key={i} className={`frame-card ${i === frames.length - 1 ? 'active' : ''}`}>
                         {i === frames.length - 1 && (
-                            <div className="execution-cursor">
-                                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-                                    <path d="M5.59,7.41L7,6L13,12L7,18L5.59,16.59L10.17,12L5.59,7.41M11.59,7.41L13,6L19,12L13,18L11.59,16.59L16.17,12L11.59,7.41Z" />
+                            <div className="active-pointer">
+                                <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M10,17L15,12L10,7V17Z" />
                                 </svg>
                             </div>
                         )}
                         <div className="frame-title">{frame}</div>
-                        <div className="text-[9px] text-gray-400 mt-2 uppercase font-mono tracking-tighter">
-                            Execution_Context_{frames.length - i}
+                        <div className="mt-2 flex justify-between items-end">
+                            <span className="text-[8px] font-mono text-gray-400">CONTEXT_ID: 0x{i.toString(16)}</span>
+                            <span className="text-[7px] font-bold text-blue-500 uppercase tracking-tighter">Running...</span>
                         </div>
                     </div>
                 ))}
             </div>
 
-            <div className="stack-base"></div>
-            <div className="text-[10px] font-mono text-gray-400 mt-4 uppercase">
-                Hardware Call Stack (LIFO)
-            </div>
+            <div className="stack-foundation"></div>
+            <p className="mt-4 text-[10px] font-mono text-gray-400 uppercase tracking-widest">Global_Memory_Base</p>
         </div>
     );
 };
 
 export default CallStackVisualizer;
-

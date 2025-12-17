@@ -5,6 +5,8 @@ import CallStackVisualizer from './visualizations/CallStackVisualizer';
 import EventLoopVisualizer from './visualizations/EventLoopVisualizer';
 import PrototypeVisualizer from './visualizations/PrototypeVisualizer';
 import ArrayVisualizer from './visualizations/ArrayVisualizer';
+import MapSetVisualizer from './visualizations/MapSetVisualizer';
+import GeneratorVisualizer from './visualizations/GeneratorVisualizer';
 import { Cpu } from 'lucide-react';
 
 const VisualizerCanvas = ({ topicId, code, isRunning }) => {
@@ -12,8 +14,8 @@ const VisualizerCanvas = ({ topicId, code, isRunning }) => {
 
     useEffect(() => {
         try {
-            // Logic for Variables, Scope, Operators
-            if (['variables', 'variables-scope', 'operators'].includes(topicId)) {
+            // Logic for Variables, Scope, Operators, Property Descriptors
+            if (['variables', 'variables-scope', 'operators', 'property-descriptors'].includes(topicId)) {
                 const varRegex = /(?:let|const|var)\s+([\w$]+)\s*=\s*([^;]+);?/g;
                 let match;
                 const variables = [];
@@ -68,11 +70,19 @@ const VisualizerCanvas = ({ topicId, code, isRunning }) => {
             else if (topicId === 'prototype-chain') {
                 setVisualization({ type: 'prototype', chain: ['Instance', 'Prototype', 'Object.prototype', 'null'] });
             }
-            // Logic for Arrays
-            else if (topicId === 'arrays') {
+            // Logic for Arrays / Iteration
+            else if (topicId === 'arrays' || topicId === 'iteration-protocols') {
                 const arrayMatch = code.match(/\[(.*?)\]/);
                 const items = arrayMatch ? arrayMatch[1].split(',').map(s => s.trim()) : ['1', '2', '3'];
                 setVisualization({ type: 'arrays', items });
+            }
+            // Logic for Map/Set
+            else if (topicId === 'map-set') {
+                setVisualization({ type: 'mapset' });
+            }
+            // Logic for Generators
+            else if (topicId === 'generators') {
+                setVisualization({ type: 'generator' });
             }
             else {
                 setVisualization({ type: 'default' });
@@ -98,6 +108,10 @@ const VisualizerCanvas = ({ topicId, code, isRunning }) => {
                 return <PrototypeVisualizer chain={visualization.chain} />;
             case 'arrays':
                 return <ArrayVisualizer items={visualization.items} />;
+            case 'mapset':
+                return <MapSetVisualizer code={code} />;
+            case 'generator':
+                return <GeneratorVisualizer code={code} />;
             case 'error':
                 return (
                     <div className="flex items-center justify-center h-full p-4 text-red-400 font-mono text-xs">
@@ -115,7 +129,7 @@ const VisualizerCanvas = ({ topicId, code, isRunning }) => {
     };
 
     return (
-        <div className="w-full h-full relative overflow-hidden bg-white/50">
+        <div className="w-full h-full relative overflow-hidden" style={{ backgroundColor: 'transparent' }}>
             {renderContent()}
         </div>
     );
